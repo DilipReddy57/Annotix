@@ -10,52 +10,52 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-mono: "JetBrains Mono", "Consolas", monospace;
 
-  /* Color Palette - Pure Black + Electric Accents */
-  --color-background: #000000;
-  --color-foreground: #ffffff;
+  /* Color Palette - Modern Indigo/Purple + Warm Accents (Roboflow-inspired) */
+  --color-background: #0f0f14;
+  --color-foreground: #f8fafc;
 
-  --color-card: #0a0a0a;
-  --color-card-foreground: #ffffff;
+  --color-card: #16161d;
+  --color-card-foreground: #f8fafc;
 
-  --color-popover: #0a0a0a;
-  --color-popover-foreground: #ffffff;
+  --color-popover: #1a1a24;
+  --color-popover-foreground: #f8fafc;
 
-  /* Primary: Electric Violet */
-  --color-primary: #8b5cf6;
-  --color-primary-foreground: #000000;
+  /* Primary: Indigo Blue */
+  --color-primary: #6366f1;
+  --color-primary-foreground: #ffffff;
 
-  /* Secondary: Subtle Gray */
-  --color-secondary: #1a1a1a;
-  --color-secondary-foreground: #a3a3a3;
+  /* Secondary: Cool Slate */
+  --color-secondary: #1e1e2a;
+  --color-secondary-foreground: #94a3b8;
 
-  --color-muted: #171717;
-  --color-muted-foreground: #737373;
+  --color-muted: #1c1c26;
+  --color-muted-foreground: #64748b;
 
-  /* Accent: Cyan for highlights */
-  --color-accent: #06b6d4;
-  --color-accent-foreground: #000000;
+  /* Accent: Vibrant Teal */
+  --color-accent: #14b8a6;
+  --color-accent-foreground: #ffffff;
 
   /* Status Colors */
-  --color-destructive: #ef4444;
+  --color-destructive: #f43f5e;
   --color-destructive-foreground: #ffffff;
-  --color-success: #22c55e;
+  --color-success: #10b981;
   --color-warning: #f59e0b;
 
-  --color-border: #262626;
-  --color-input: #262626;
-  --color-ring: #8b5cf6;
+  --color-border: #2a2a38;
+  --color-input: #2a2a38;
+  --color-ring: #6366f1;
 
   /* Matrix Green (for intro only) */
   --color-matrix: #00ff41;
 
-  /* Shadows - Deeper for black bg */
+  /* Shadows - Deeper purple glow */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5),
     0 4px 6px -4px rgb(0 0 0 / 0.5);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5),
     0 8px 10px -6px rgb(0 0 0 / 0.5);
-  --shadow-glow: 0 0 20px rgb(139 92 246 / 0.3);
+  --shadow-glow: 0 0 20px rgb(99 102 241 / 0.4);
 }
 
 /* Global Styles */
