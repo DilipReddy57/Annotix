@@ -530,14 +530,25 @@ const ProjectView = () => {
                 </motion.div>
               ))}
 
-              {/* Add New Card */}
-              <motion.div
+              {/* Add New Card - Upload Zone */}
+              <motion.label
+                htmlFor="studio-file-upload"
                 variants={fadeIn}
-                className="aspect-[4/3] rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 cursor-pointer transition-all backdrop-blur-sm"
+                className={cn(
+                  "aspect-[4/3] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all backdrop-blur-sm",
+                  isDragging
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5"
+                )}
               >
-                <Plus size={28} />
-                <span className="text-xs font-medium mt-2">Add New</span>
-              </motion.div>
+                <Upload size={28} />
+                <span className="text-xs font-medium mt-2">
+                  {isDragging ? "Drop files here" : "Add New"}
+                </span>
+                <span className="text-[10px] text-muted-foreground mt-1">
+                  Click or drag files
+                </span>
+              </motion.label>
             </motion.div>
           )}
         </div>
