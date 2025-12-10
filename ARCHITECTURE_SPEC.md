@@ -67,13 +67,13 @@ graph TD
     A[User Uploads Image/Video] --> B[Aggregate Agent]
     B --> C{Orchestrator}
     C --> D[SAM 3 Agent]
-    D -- "Prompt (Text/Point/Box)" --> E[Transformers SAM 3 Model]
-    E -- "Masks + IoU" --> D
+    D --> E[Transformers SAM 3 Model]
+    E --> D
     D --> F[Refinement Agent]
-    F --> G[Classification Agent (CLIP)]
-    G -- "Label" --> H[RAG Agent]
-    H -- "Consistent Label" --> I[QA Agent]
-    I -- "Valid/Invalid" --> C
+    F --> G[Classification Agent]
+    G --> H[RAG Agent]
+    H --> I[QA Agent]
+    I --> C
     C --> J[Results Store]
     J --> K[Frontend Dashboard]
 ```
