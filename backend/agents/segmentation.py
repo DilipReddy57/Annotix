@@ -6,18 +6,13 @@ This agent provides:
 - Box-prompted segmentation
 - Video temporal tracking with object persistence
 - Mask-to-polygon conversion for COCO export
+
+NOTE: This requires WSL2 on Windows for triton support.
+See docs/WSL2_SETUP.md for installation instructions.
 """
 
 import sys
 import os
-
-# Install mock triton for Windows/CPU compatibility BEFORE any SAM3 imports
-# Triton is a Linux-only GPU kernel compiler - this mock allows SAM3 to run on Windows
-try:
-    import triton
-except ImportError:
-    from backend.utils.mock_triton import install_mock_triton
-    install_mock_triton()
 
 import cv2
 import torch
