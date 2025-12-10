@@ -1,0 +1,98 @@
+# =============================================
+# Data Annotation with SAM3 - Requirements
+# Scalable Production-Ready Dependencies
+# =============================================
+
+# ============ Core Deep Learning ============
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# ============ SAM3 Dependencies ============
+timm>=1.0.17
+numpy>=1.26.0,<2.0.0
+tqdm
+ftfy>=6.1.1
+regex
+iopath>=0.1.10
+typing_extensions
+huggingface_hub>=0.20.0
+safetensors>=0.4.0
+transformers>=4.38.0
+accelerate>=0.25.0
+tokenizers>=0.15.0
+
+# ============ Image & Video Processing ============
+opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+ffmpeg-python>=0.2.0
+scikit-image>=0.21.0
+imageio>=2.33.0
+
+# ============ FastAPI Backend ============
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+aiofiles>=23.2.0
+httpx>=0.25.0
+
+# ============ Database & ORM ============
+sqlmodel>=0.0.14
+sqlalchemy>=2.0.23
+alembic>=1.12.0
+# Optional: Async PostgreSQL for production scaling
+# asyncpg>=0.29.0
+# Optional: Redis for caching
+# redis>=5.0.0
+
+# ============ Authentication & Security ============
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# ============ Scientific Computing ============
+scipy>=1.11.0
+scikit-learn>=1.3.0
+pandas>=2.1.0
+
+# ============ Utilities ============
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+rich>=13.7.0
+tenacity>=8.2.0
+
+# ============ Logging & Monitoring (Scalability) ============
+loguru>=0.7.0
+prometheus-client>=0.19.0
+structlog>=23.2.0
+
+# ============ Task Queue (Scalability) ============
+celery>=5.3.0
+# Optional: RabbitMQ broker
+# kombu>=5.3.0
+
+# ============ Development ============
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.12.0
+ruff>=0.1.0
+isort>=5.13.0
+
+# ============ Advanced AI Features ============
+# LLM Integration (choose one or both)
+google-generativeai>=0.3.0  # For Gemini
+# openai>=1.0.0             # For OpenAI GPT (uncomment if needed)
+
+# RAG & Vector Database
+chromadb>=0.4.0
+
+# Embedding Visualization
+umap-learn>=0.5.0  # For UMAP dimensionality reduction
+plotly>=5.18.0    # For interactive visualization
+
+# ============ SAM Original (if needed) ============
+# git+https://github.com/facebookresearch/segment-anything.git
+
