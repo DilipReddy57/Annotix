@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Search,
   Filter,
@@ -9,6 +9,9 @@ import {
   Upload,
   ArrowLeft,
   Image as ImageIcon,
+  Loader2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,6 +51,88 @@ const ProjectView = () => {
   const [videoPrompt, setVideoPrompt] = useState("");
   const [videoAnnotations, setVideoAnnotations] = useState<any[]>([]);
   const [videoProcessing, setVideoProcessing] = useState(false);
+
+  // Upload State
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "success" | "error"
+  >("idle");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upload handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const processUpload = useCallback(
+    async (files: File[]) => {
+      if (!selectedProject || files.length === 0) return;
+
+      setIsUploading(true);
+      setUploadStatus("uploading");
+
+      try {
+        const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+        const videoFiles = files.filter((f) => f.type.startsWith("video/"));
+
+        if (imageFiles.length > 0) {
+          const formData = new FormData();
+          imageFiles.forEach((f) => formData.append("files", f));
+          await axios.post(`${API_URL}/${selectedProject.id}/upload`, formData);
+        }
+
+        for (const video of videoFiles) {
+          const formData = new FormData();
+          formData.append("file", video);
+          await axios.post(
+            `${API_URL}/${selectedProject.id}/videos/upload`,
+            formData
+          );
+        }
+
+        setUploadStatus("success");
+        // Refresh project data
+        await selectProject(selectedProject);
+        setTimeout(() => setUploadStatus("idle"), 2000);
+      } catch (error) {
+        console.error("Upload failed:", error);
+        setUploadStatus("error");
+        setTimeout(() => setUploadStatus("idle"), 3000);
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [selectedProject]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      const files = Array.from(e.dataTransfer.files);
+      processUpload(files);
+    },
+    [processUpload]
+  );
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    processUpload(files);
+  };
+
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -210,7 +295,24 @@ const ProjectView = () => {
 
   // ========== MAIN GALLERY VIEW ==========
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
+    <div
+      className={cn(
+        "h-full flex flex-col p-6 space-y-6 transition-colors",
+        isDragging && "bg-primary/5 ring-2 ring-primary/30 ring-inset"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,video/*"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
       {/* Studio Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -232,6 +334,33 @@ const ProjectView = () => {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Upload Status Indicator */}
+          {uploadStatus !== "idle" && (
+            <div
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium",
+                uploadStatus === "uploading" && "bg-primary/10 text-primary",
+                uploadStatus === "success" && "bg-success/10 text-success",
+                uploadStatus === "error" && "bg-destructive/10 text-destructive"
+              )}
+            >
+              {uploadStatus === "uploading" && (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Uploading...
+                </>
+              )}
+              {uploadStatus === "success" && (
+                <>
+                  <CheckCircle size={14} /> Uploaded!
+                </>
+              )}
+              {uploadStatus === "error" && (
+                <>
+                  <XCircle size={14} /> Failed
+                </>
+              )}
+            </div>
+          )}
           <div className="relative group">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
@@ -246,8 +375,20 @@ const ProjectView = () => {
           <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white transition-colors flex items-center gap-2 backdrop-blur-md">
             <Filter size={16} /> Filters
           </button>
-          <button className="px-4 py-2 bg-primary hover:bg-primary/90 text-background font-bold rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center gap-2">
-            <Plus size={16} /> Upload
+          <button
+            onClick={openFileDialog}
+            disabled={isUploading}
+            className={cn(
+              "px-4 py-2 bg-primary hover:bg-primary/90 text-background font-bold rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center gap-2",
+              isUploading && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {isUploading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Plus size={16} />
+            )}
+            {isUploading ? "Uploading..." : "Upload"}
           </button>
         </div>
       </motion.div>

@@ -129,7 +129,7 @@ const Home = () => {
       setError(null);
 
       try {
-        const res = await axios.get(`${API_BASE_URL}/projects/`, {
+        const res = await axios.get(`${API_BASE_URL}/api/projects/`, {
           timeout: 5000,
         });
         const projects = res.data || [];
@@ -141,7 +141,7 @@ const Home = () => {
         for (const project of projects.slice(0, 5)) {
           try {
             const projectRes = await axios.get(
-              `${API_BASE_URL}/projects/${project.id}`,
+              `${API_BASE_URL}/api/projects/${project.id}`,
               { timeout: 5000 }
             );
             const images = projectRes.data.images || [];
@@ -214,9 +214,13 @@ const Home = () => {
       try {
         // Create project
         const timestamp = new Date().toLocaleString();
-        const projectRes = await axios.post(`${API_BASE_URL}/projects/`, null, {
-          params: { name: `Upload ${timestamp}` },
-        });
+        const projectRes = await axios.post(
+          `${API_BASE_URL}/api/projects/`,
+          null,
+          {
+            params: { name: `Upload ${timestamp}` },
+          }
+        );
         const projectId = projectRes.data.id;
 
         // Upload files
@@ -227,7 +231,7 @@ const Home = () => {
           const imgData = new FormData();
           imageFiles.forEach((f) => imgData.append("files", f));
           await axios.post(
-            `${API_BASE_URL}/projects/${projectId}/upload`,
+            `${API_BASE_URL}/api/projects/${projectId}/upload`,
             imgData
           );
         }
@@ -236,7 +240,7 @@ const Home = () => {
           const vidData = new FormData();
           vidData.append("file", video);
           await axios.post(
-            `${API_BASE_URL}/projects/${projectId}/videos/upload`,
+            `${API_BASE_URL}/api/projects/${projectId}/videos/upload`,
             vidData
           );
         }

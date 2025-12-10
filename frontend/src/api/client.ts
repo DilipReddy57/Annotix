@@ -10,6 +10,7 @@ export const client = axios.create({
 });
 
 export const api = {
+  // Segmentation
   segmentInteractive: async (
     projectId: string,
     imageId: string,
@@ -23,6 +24,7 @@ export const api = {
     return response.data;
   },
 
+  // Video annotation
   annotateVideo: async (projectId: string, videoId: string, prompt: string) => {
     const response = await client.post(
       `/api/projects/${projectId}/videos/${videoId}/annotate?prompt=${encodeURIComponent(
@@ -30,5 +32,52 @@ export const api = {
       )}`
     );
     return response.data;
+  },
+
+  // LLM Auto-Prompt Generation
+  generatePrompt: async (imageUrl: string) => {
+    const response = await client.post("/api/ai/generate-prompt", { imageUrl });
+    return response.data;
+  },
+
+  // RAG Label Suggestions
+  getLabelSuggestions: async (imageUrl: string, currentLabels?: string[]) => {
+    const response = await client.post("/api/ai/label-suggestions", {
+      imageUrl,
+      currentLabels,
+    });
+    return response.data;
+  },
+
+  // Batch Annotation
+  batchAnnotate: async (
+    projectId: string,
+    imageIds: string[],
+    prompt: string
+  ) => {
+    const response = await client.post(
+      `/api/projects/${projectId}/batch-annotate`,
+      { imageIds, prompt }
+    );
+    return response.data;
+  },
+
+  // Export to COCO format
+  exportCoco: async (projectId: string) => {
+    const response = await client.get(
+      `/api/projects/${projectId}/export/coco`,
+      { responseType: "blob" }
+    );
+    return response.data;
+  },
+
+  // Health check
+  healthCheck: async () => {
+    try {
+      const response = await client.get("/health");
+      return { ok: true, data: response.data };
+    } catch {
+      return { ok: false, data: null };
+    }
   },
 };
