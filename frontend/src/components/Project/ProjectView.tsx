@@ -132,7 +132,12 @@ const ProjectView = () => {
   };
 
   const openFileDialog = () => {
-    fileInputRef.current?.click();
+    console.log("openFileDialog called, ref:", fileInputRef.current);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    } else {
+      console.error("File input ref is null!");
+    }
   };
 
   useEffect(() => {
@@ -350,6 +355,7 @@ const ProjectView = () => {
       >
         {/* Hidden file input */}
         <input
+          id="studio-file-upload"
           ref={fileInputRef}
           type="file"
           multiple
@@ -420,12 +426,12 @@ const ProjectView = () => {
             <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white transition-colors flex items-center gap-2 backdrop-blur-md">
               <Filter size={16} /> Filters
             </button>
-            <button
-              onClick={openFileDialog}
-              disabled={isUploading}
+            <label
+              htmlFor="studio-file-upload"
               className={cn(
-                "px-4 py-2 bg-primary hover:bg-primary/90 text-background font-bold rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center gap-2",
-                isUploading && "opacity-50 cursor-not-allowed"
+                "px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center gap-2 cursor-pointer",
+                isUploading &&
+                  "opacity-50 cursor-not-allowed pointer-events-none"
               )}
             >
               {isUploading ? (
@@ -434,7 +440,7 @@ const ProjectView = () => {
                 <Plus size={16} />
               )}
               {isUploading ? "Uploading..." : "Upload"}
-            </button>
+            </label>
           </div>
         </motion.div>
 
