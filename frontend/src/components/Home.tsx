@@ -570,6 +570,59 @@ const Home = () => {
           </motion.div>
         </div>
 
+        {/* SAM3 Features Section */}
+        <motion.div variants={fadeInUp}>
+          <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+            <Sparkles size={18} className="text-primary" />
+            Powered by SAM3
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Feature 1: Text Prompts */}
+            <div className="glass rounded-xl p-4 hover:border-primary/30 transition-all group cursor-pointer">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-cyan-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <span className="text-lg">💬</span>
+              </div>
+              <p className="font-medium text-sm">Text Prompts</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                "red car on the left"
+              </p>
+            </div>
+
+            {/* Feature 2: 270K Concepts */}
+            <div className="glass rounded-xl p-4 hover:border-accent/30 transition-all group cursor-pointer">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <span className="text-lg">🧠</span>
+              </div>
+              <p className="font-medium text-sm">270K+ Concepts</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                50x more than SAM2
+              </p>
+            </div>
+
+            {/* Feature 3: Video Tracking */}
+            <div className="glass rounded-xl p-4 hover:border-success/30 transition-all group cursor-pointer">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <span className="text-lg">🎬</span>
+              </div>
+              <p className="font-medium text-sm">Video Tracking</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Temporal propagation
+              </p>
+            </div>
+
+            {/* Feature 4: RAG Intelligence */}
+            <div className="glass rounded-xl p-4 hover:border-warning/30 transition-all group cursor-pointer">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <span className="text-lg">🔗</span>
+              </div>
+              <p className="font-medium text-sm">RAG Intelligence</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Label consistency
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Recent Activity */}
         <motion.div variants={fadeInUp}>
           <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">

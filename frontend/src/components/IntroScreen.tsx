@@ -172,7 +172,33 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
                   transition={{ delay: 0.3, duration: 0.5 }}
                   className="mt-4 text-muted-foreground text-lg font-mono"
                 >
-                  Intelligent Annotation Platform
+                  Autonomous Annotation Platform
+                </motion.p>
+
+                {/* SAM3 Badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                  className="mt-3 flex items-center justify-center gap-2"
+                >
+                  <span className="px-3 py-1 text-xs font-mono bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/30 rounded-full text-purple-300">
+                    Powered by SAM3
+                  </span>
+                  <span className="px-3 py-1 text-xs font-mono bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full text-green-300">
+                    270K+ Concepts
+                  </span>
+                </motion.div>
+
+                {/* Creator Credit */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                  className="mt-6 text-xs text-muted-foreground/60 font-mono"
+                >
+                  Created by <span className="text-primary">Dilip Reddy</span> •
+                  Built with Antigravity
                 </motion.p>
               </motion.div>
             )}

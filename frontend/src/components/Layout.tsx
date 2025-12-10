@@ -294,6 +294,54 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 bg-background/50 backdrop-blur-sm py-4">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Left: Status Indicators */}
+            <div className="flex items-center gap-4">
+              {/* SAM3 Status */}
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs font-mono text-muted-foreground">
+                  SAM3 Model Ready
+                </span>
+              </div>
+
+              {/* Tech Stack Badges */}
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="px-2 py-0.5 text-[10px] font-mono bg-purple-500/20 border border-purple-500/30 rounded text-purple-300">
+                  SAM3
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-mono bg-blue-500/20 border border-blue-500/30 rounded text-blue-300">
+                  RAG
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-mono bg-cyan-500/20 border border-cyan-500/30 rounded text-cyan-300">
+                  LLM
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-mono bg-green-500/20 border border-green-500/30 rounded text-green-300">
+                  Active Learning
+                </span>
+              </div>
+            </div>
+
+            {/* Center: Version */}
+            <div className="text-xs text-muted-foreground/60 font-mono">
+              v1.0.0 • 270K+ Concepts
+            </div>
+
+            {/* Right: Creator Credit */}
+            <div className="text-xs text-muted-foreground/60 font-mono">
+              Created by{" "}
+              <span className="text-primary hover:underline cursor-pointer">
+                Dilip Reddy
+              </span>{" "}
+              • Built with <span className="text-accent">Antigravity</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
