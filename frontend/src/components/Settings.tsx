@@ -39,6 +39,12 @@ interface SettingSection {
 
 const sections: SettingSection[] = [
   {
+    id: "sam3",
+    icon: Settings,
+    title: "SAM3 Model",
+    description: "Model configuration and inference settings",
+  },
+  {
     id: "appearance",
     icon: Palette,
     title: "Appearance",
@@ -71,7 +77,7 @@ const sections: SettingSection[] = [
 ];
 
 const SettingsPage = () => {
-  const [activeSection, setActiveSection] = useState("appearance");
+  const [activeSection, setActiveSection] = useState("sam3");
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [notifications, setNotifications] = useState({
     email: true,
@@ -80,6 +86,13 @@ const SettingsPage = () => {
     annotations: true,
   });
   const [saved, setSaved] = useState(false);
+  const [sam3Config, setSam3Config] = useState({
+    confidenceThreshold: 0.5,
+    maxAnnotations: 100,
+    useAutoPrompts: true,
+    enableRAG: true,
+    enableActiveLearning: true,
+  });
 
   const handleSave = () => {
     setSaved(true);
@@ -88,6 +101,140 @@ const SettingsPage = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "sam3":
+        return (
+          <div className="space-y-6">
+            {/* Model Status */}
+            <div className="p-4 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+                <div>
+                  <p className="font-medium text-green-400">SAM3 Model Ready</p>
+                  <p className="text-sm text-muted-foreground">
+                    270,000+ concepts available
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Confidence Threshold */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">
+                Confidence Threshold
+              </h3>
+              <div className="space-y-3">
+                <input
+                  type="range"
+                  min="0.1"
+                  max="0.95"
+                  step="0.05"
+                  value={sam3Config.confidenceThreshold}
+                  onChange={(e) =>
+                    setSam3Config((c) => ({
+                      ...c,
+                      confidenceThreshold: parseFloat(e.target.value),
+                    }))
+                  }
+                  className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Low (0.1)</span>
+                  <span className="text-primary font-medium">
+                    {sam3Config.confidenceThreshold}
+                  </span>
+                  <span>High (0.95)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Toggles */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">AI Features</h3>
+              <div className="space-y-3">
+                {[
+                  {
+                    key: "useAutoPrompts",
+                    label: "LLM Auto-Prompts",
+                    desc: "Generate prompts using Gemini/GPT",
+                  },
+                  {
+                    key: "enableRAG",
+                    label: "RAG Intelligence",
+                    desc: "Label consistency with knowledge base",
+                  },
+                  {
+                    key: "enableActiveLearning",
+                    label: "Active Learning",
+                    desc: "Smart sample selection",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-white/20 transition-all"
+                  >
+                    <div>
+                      <p className="font-medium">{item.label}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.desc}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setSam3Config((c) => ({
+                          ...c,
+                          [item.key]: !c[item.key as keyof typeof c],
+                        }))
+                      }
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-all relative",
+                        sam3Config[item.key as keyof typeof sam3Config]
+                          ? "bg-primary"
+                          : "bg-white/20"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all",
+                          sam3Config[item.key as keyof typeof sam3Config]
+                            ? "left-6"
+                            : "left-0.5"
+                        )}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* API Keys */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">API Configuration</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">
+                    Gemini API Key
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter your Gemini API key"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">
+                    Hugging Face Token
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Enter your HuggingFace token"
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case "appearance":
         return (
           <div className="space-y-6">
