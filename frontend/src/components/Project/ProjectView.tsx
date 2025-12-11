@@ -14,12 +14,12 @@ import {
 import axios from "axios";
 import { motion } from "framer-motion";
 
-import { api } from "../../api/client";
+import { api, API_BASE_URL } from "../../api/client";
 import AnnotationEditor from "../Editor/AnnotationEditor";
 import VideoPlayer from "../Video/VideoPlayer";
 import { cn } from "@/lib/utils";
 
-const API_URL = "http://localhost:8000/api/projects";
+const API_URL = `${API_BASE_URL}/api/projects`;
 
 // Animation Variants
 const fadeIn = {
@@ -181,7 +181,7 @@ const ProjectView = () => {
     setSelectedVideo(null);
     setVideoAnnotations([]);
     try {
-      const res = await axios.get(`${API_URL}/${p.id}`);
+      const res = await axios.get(`${API_URL}/${p.id}/images`);
       setImages(res.data.images || []);
     } catch (e) {
       setImages([]);

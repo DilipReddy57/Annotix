@@ -78,22 +78,25 @@ const Home = () => {
     "idle" | "uploading" | "success" | "error"
   >("idle");
 
-  // Fetch dashboard stats with error handling
+  // Fetch dashboard stats with robust error handling and caching
   useEffect(() => {
-    let mounted = true;
+    let isMounted = true;
+    const controller = new AbortController();
 
     const fetchStats = async () => {
-      if (!mounted) return;
-      setIsLoading(true);
+      // Don't set loading if we already have data to prevent flicker
+      if (stats.totalAssets === 0 && stats.totalProjects === 0) {
+        setIsLoading(true);
+      }
       setError(null);
 
       try {
-        // Use dedicated stats endpoint for dashboard data
         const res = await axios.get(`${API_BASE_URL}/api/projects/stats`, {
-          timeout: 5000,
+          signal: controller.signal,
+          timeout: 10000, // Longer timeout for stability
         });
 
-        if (mounted) {
+        if (isMounted && res.data) {
           setStats({
             totalProjects: res.data.totalProjects || 0,
             totalAssets: res.data.totalAssets || 0,
@@ -104,35 +107,30 @@ const Home = () => {
           });
         }
       } catch (e: any) {
+        if (axios.isCancel(e)) return;
         console.error("Failed to fetch stats:", e);
-        if (mounted) {
-          // Show dashboard with zeros instead of error, still usable
-          setStats({
-            totalProjects: 0,
-            totalAssets: 0,
-            totalAnnotations: 0,
-            totalClasses: 0,
-            todayAnnotations: 0,
-            recentActivity: [],
-          });
-          // Only show error if backend is completely unreachable
+
+        if (isMounted) {
+          // Only show error banner if backend is completely down
           if (e.code === "ECONNREFUSED" || e.code === "ERR_NETWORK") {
             setError(
               "Backend not available. Start the server to see your data."
             );
           }
+          // Do NOT zero out stats on transient errors if we have data
         }
       } finally {
-        if (mounted) setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchStats();
 
     return () => {
-      mounted = false;
+      isMounted = false;
+      controller.abort();
     };
-  }, []);
+  }, []); // Empty dependency array - run once on mount
 
   // Upload Handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
