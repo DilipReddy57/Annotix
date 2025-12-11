@@ -1,0 +1,16 @@
+# Railway.app Configuration
+# Deploy with: railway up
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+
+[env]
+PYTHON_VERSION = "3.11"
+DATA_DIR = "/tmp/annotix-data"
+MODELS_DIR = "/tmp/annotix-models"
+ENVIRONMENT = "production"

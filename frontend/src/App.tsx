@@ -11,6 +11,7 @@ import Layout from "./components/Layout";
 import Home from "./components/Home";
 import ProjectView from "./components/Project/ProjectView";
 import SettingsPage from "./components/Settings";
+import Analytics from "./components/Analytics";
 
 function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -45,6 +46,16 @@ function App() {
               element={
                 <Layout>
                   <ProjectView />
+                </Layout>
+              }
+            />
+
+            {/* Analytics */}
+            <Route
+              path="/analytics/:projectId"
+              element={
+                <Layout>
+                  <Analytics />
                 </Layout>
               }
             />
