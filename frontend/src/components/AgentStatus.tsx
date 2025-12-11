@@ -1,12 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  Terminal,
-  Activity,
-  CheckCircle,
-  XCircle,
-  Play,
-  Clock,
-} from "lucide-react";
+import { Terminal, Activity, Play, Clock } from "lucide-react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 

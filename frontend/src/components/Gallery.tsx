@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { Download } from "lucide-react";
 import { motion } from "framer-motion";
 
+interface GalleryImage {
+  status?: string;
+  error?: string;
+  image_path: string;
+  annotations?: Array<{ label: string; score: number }>;
+}
+
 const Gallery = () => {
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState<GalleryImage[]>([]);
 
   useEffect(() => {
     const fetchImages = async () => {

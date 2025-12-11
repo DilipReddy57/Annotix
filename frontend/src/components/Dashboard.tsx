@@ -1,4 +1,3 @@
-import React from "react";
 import ProjectView from "./Project/ProjectView";
 
 // The "Dashboard" is now just the Studio (Gallery) View

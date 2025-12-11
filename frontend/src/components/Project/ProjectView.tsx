@@ -135,15 +135,6 @@ const ProjectView = () => {
     processUpload(files);
   };
 
-  const openFileDialog = () => {
-    console.log("openFileDialog called, ref:", fileInputRef.current);
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    } else {
-      console.error("File input ref is null!");
-    }
-  };
-
   useEffect(() => {
     fetchProjects();
   }, []);

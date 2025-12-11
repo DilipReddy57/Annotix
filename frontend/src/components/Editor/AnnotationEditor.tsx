@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Layers,
   Eye,
@@ -7,10 +7,7 @@ import {
   Save,
   Wand2,
   MousePointer2,
-  ChevronDown,
-  Maximize2,
   ZoomIn,
-  ZoomOut,
   Undo2,
   Redo2,
   Loader2,

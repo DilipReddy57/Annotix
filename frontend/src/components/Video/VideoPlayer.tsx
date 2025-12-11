@@ -1,12 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import {
-  Play,
-  Pause,
-  Square,
-  SkipBack,
-  SkipForward,
-  Maximize2,
-} from "lucide-react";
+import { Play, Pause, Maximize2 } from "lucide-react";
 
 interface Annotation {
   frame: number;

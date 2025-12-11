@@ -170,7 +170,7 @@ function getRandomEdgePoint(
 function createCurvedPath(
   start: { x: number; y: number },
   end: { x: number; y: number },
-  containerSize: { width: number; height: number }
+  _containerSize: { width: number; height: number }
 ) {
   const curveVariation = 30 + Math.random() * 60;
   const midX = (start.x + end.x) / 2 + (Math.random() - 0.5) * curveVariation;
