@@ -20,9 +20,11 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "../api/client";
+import AnnotationRain from "./ui/annotation-rain";
 
 // Animation variants
 const fadeInUp = {
@@ -37,46 +39,6 @@ const stagger = {
     transition: { staggerChildren: 0.1 },
   },
 };
-
-// Floating annotation card for visual effect
-const FloatingCard = ({
-  delay,
-  x,
-  y,
-}: {
-  delay: number;
-  x: string;
-  y: string;
-}) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{
-      opacity: [0, 0.6, 0.6, 0],
-      scale: [0.8, 1, 1, 0.9],
-      y: [0, -20, -20, -40],
-    }}
-    transition={{
-      duration: 8,
-      delay,
-      repeat: Infinity,
-      repeatDelay: 2,
-    }}
-    className="absolute glass rounded-xl p-3 pointer-events-none"
-    style={{ left: x, top: y }}
-  >
-    <div className="flex items-center gap-2">
-      <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
-        <Box size={14} className="text-primary" />
-      </div>
-      <div>
-        <div className="text-xs font-medium">Object Detected</div>
-        <div className="text-[10px] text-muted-foreground">
-          Confidence: 98.2%
-        </div>
-      </div>
-    </div>
-  </motion.div>
-);
 
 interface DashboardStats {
   totalProjects: number;
@@ -316,17 +278,14 @@ const Home = () => {
 
   return (
     <div className="min-h-screen p-6 md:p-8 relative overflow-hidden">
-      {/* Background Visual Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <FloatingCard delay={0} x="10%" y="20%" />
-        <FloatingCard delay={2} x="80%" y="30%" />
-        <FloatingCard delay={4} x="20%" y="70%" />
-        <FloatingCard delay={6} x="70%" y="60%" />
+      {/* Annotation Rain Background - Matrix Style */}
+      <AnnotationRain />
 
-        {/* Gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-      </div>
+      {/* Gradient overlay for readability */}
+      <div
+        className="fixed inset-0 bg-gradient-to-b from-background/50 via-background/80 to-background pointer-events-none"
+        style={{ zIndex: 1 }}
+      />
 
       {/* Hidden file input */}
       <input
