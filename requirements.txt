@@ -89,6 +89,10 @@ google-generativeai>=0.3.0  # For Gemini
 # RAG & Vector Database
 chromadb>=0.4.0
 
+# Dataset Import (Kaggle, HuggingFace)
+kaggle>=1.8.0
+datasets>=4.0.0
+
 # Embedding Visualization
 umap-learn>=0.5.0  # For UMAP dimensionality reduction
 plotly>=5.18.0    # For interactive visualization

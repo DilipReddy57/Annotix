@@ -85,23 +85,55 @@ def download_dataset_task(project_id: str, url: str, source: str, project_dir: s
     import requests
     import zipfile
     import io
+    import glob
+    from sqlmodel import Session as SqlSession
     
     logger.info(f"Starting dataset download for project {project_id} from {url}")
     
+    downloaded_files = []
+    
     try:
-        # For Kaggle, we'd need kaggle API authentication
-        # For now, handle direct URLs and provide helpful messages for others
-        
         if source == "kaggle":
-            # Kaggle requires API authentication
-            # User would need to have kaggle.json configured
-            logger.warning("Kaggle datasets require API key. Please configure ~/.kaggle/kaggle.json")
-            # Placeholder: In production, use kaggle.api.dataset_download_files()
+            # Try to use Kaggle API if available
+            try:
+                import kaggle
+                # Extract dataset identifier from URL: kaggle.com/datasets/{user}/{dataset}
+                parts = url.replace("https://", "").replace("http://", "").split("/")
+                if "datasets" in parts:
+                    idx = parts.index("datasets")
+                    if len(parts) > idx + 2:
+                        dataset_id = f"{parts[idx+1]}/{parts[idx+2]}"
+                        kaggle.api.dataset_download_files(dataset_id, path=project_dir, unzip=True)
+                        logger.info(f"Downloaded Kaggle dataset: {dataset_id}")
+                        downloaded_files = glob.glob(os.path.join(project_dir, "**/*.*"), recursive=True)
+            except ImportError:
+                logger.warning("Kaggle package not installed. Run: pip install kaggle")
+            except Exception as ke:
+                logger.warning(f"Kaggle download failed: {ke}. Make sure ~/.kaggle/kaggle.json exists")
             
         elif source == "huggingface":
-            # HuggingFace datasets can be downloaded via their API
-            logger.info(f"HuggingFace dataset: {url}")
-            # Placeholder: In production, use datasets.load_dataset()
+            # Try HuggingFace datasets
+            try:
+                from datasets import load_dataset
+                # Extract dataset name from URL
+                parts = url.replace("https://", "").replace("http://", "").split("/")
+                if "datasets" in parts:
+                    idx = parts.index("datasets")
+                    if len(parts) > idx + 2:
+                        dataset_id = f"{parts[idx+1]}/{parts[idx+2]}"
+                        ds = load_dataset(dataset_id, split="train[:100]")  # Limit to 100 samples
+                        # Save images if it's an image dataset
+                        if "image" in ds.features:
+                            for i, item in enumerate(ds):
+                                img = item["image"]
+                                img_path = os.path.join(project_dir, f"image_{i:04d}.jpg")
+                                img.save(img_path)
+                                downloaded_files.append(img_path)
+                        logger.info(f"Downloaded {len(downloaded_files)} images from HuggingFace")
+            except ImportError:
+                logger.warning("datasets package not installed. Run: pip install datasets")
+            except Exception as he:
+                logger.warning(f"HuggingFace download failed: {he}")
             
         elif source == "github":
             # GitHub raw files or releases
@@ -112,6 +144,7 @@ def download_dataset_task(project_id: str, url: str, source: str, project_dir: s
                 if url.endswith('.zip'):
                     with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
                         zf.extractall(project_dir)
+                        downloaded_files = [os.path.join(project_dir, f) for f in zf.namelist()]
                         logger.info(f"Extracted {len(zf.namelist())} files from GitHub archive")
                 else:
                     filename = url.split('/')[-1]
@@ -119,6 +152,7 @@ def download_dataset_task(project_id: str, url: str, source: str, project_dir: s
                     with open(filepath, 'wb') as f:
                         for chunk in response.iter_content(chunk_size=8192):
                             f.write(chunk)
+                    downloaded_files.append(filepath)
                     logger.info(f"Downloaded {filename} from GitHub")
         else:
             # Direct URL download
@@ -136,10 +170,30 @@ def download_dataset_task(project_id: str, url: str, source: str, project_dir: s
             if filename.endswith('.zip'):
                 with zipfile.ZipFile(filepath) as zf:
                     zf.extractall(project_dir)
-                os.remove(filepath)  # Remove the zip after extraction
+                    downloaded_files = [os.path.join(project_dir, f) for f in zf.namelist()]
+                os.remove(filepath)
                 logger.info(f"Extracted archive to {project_dir}")
             else:
+                downloaded_files.append(filepath)
                 logger.info(f"Downloaded {filename}")
+        
+        # Register downloaded images in the database
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+        with SqlSession(engine) as session:
+            for filepath in downloaded_files:
+                ext = os.path.splitext(filepath)[1].lower()
+                if ext in image_extensions:
+                    filename = os.path.basename(filepath)
+                    image = Image(
+                        project_id=project_id,
+                        filename=filename,
+                        status="pending",
+                        width=0,
+                        height=0
+                    )
+                    session.add(image)
+            session.commit()
+            logger.info(f"Registered {len(downloaded_files)} images in database")
                 
         logger.info(f"Dataset import completed for project {project_id}")
         
