@@ -9,23 +9,20 @@ import {
   FolderOpen,
   Layers,
   Tag,
-  Clock,
-  ArrowRight,
-  Plus,
-  Zap,
-  TrendingUp,
   Activity,
-  Loader2,
-  CheckCircle,
-  AlertCircle,
+  Zap,
+  Clock,
+  Plus,
+  ArrowRight,
   Image as ImageIcon,
   Video,
   Sparkles,
-  Box,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const API_BASE_URL = "http://localhost:8000";
+import { API_BASE_URL } from "../api/client";
 
 // Animation variants
 const fadeInUp = {
