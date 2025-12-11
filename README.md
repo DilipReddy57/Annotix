@@ -88,8 +88,8 @@ SAM3 introduces **open-vocabulary text prompts** - you can segment ANY concept u
 
 ```bash
 # Clone the repository
-git clone https://github.com/DilipReddy57/Cortex-AI.git
-cd Cortex-AI
+git clone https://github.com/DilipReddy57/Annotix.git
+cd Annotix
 
 # Create virtual environment
 python -m venv venv
