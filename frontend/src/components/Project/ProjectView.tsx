@@ -5,16 +5,14 @@ import {
   Plus,
   Video,
   Wand2,
-  Sparkles,
   Upload,
   ArrowLeft,
-  Image as ImageIcon,
   Loader2,
   CheckCircle,
   XCircle,
 } from "lucide-react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { api } from "../../api/client";
 import AnnotationEditor from "../Editor/AnnotationEditor";
@@ -60,6 +58,12 @@ const ProjectView = () => {
     "idle" | "uploading" | "success" | "error"
   >("idle");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // New Project State
+  const [showNewProject, setShowNewProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   // Upload handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -156,6 +160,28 @@ const ProjectView = () => {
       console.error(e);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const createProject = async () => {
+    if (!newProjectName.trim()) return;
+    setIsCreating(true);
+    try {
+      const res = await axios.post(
+        `${API_URL}/?name=${encodeURIComponent(
+          newProjectName
+        )}&description=${encodeURIComponent(newProjectDesc)}`
+      );
+      const newProject = res.data;
+      setProjects((prev) => [...prev, newProject]);
+      await selectProject(newProject);
+      setShowNewProject(false);
+      setNewProjectName("");
+      setNewProjectDesc("");
+    } catch (e) {
+      console.error("Failed to create project:", e);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -336,10 +362,53 @@ const ProjectView = () => {
           )}
         </div>
         <div className="p-3 border-t border-white/10">
-          <button className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-            <Plus size={14} />
-            New Project
-          </button>
+          {showNewProject ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Project name"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                className="w-full px-3 py-2 bg-card/50 border border-white/10 rounded-lg text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                autoFocus
+              />
+              <input
+                type="text"
+                placeholder="Description (optional)"
+                value={newProjectDesc}
+                onChange={(e) => setNewProjectDesc(e.target.value)}
+                className="w-full px-3 py-2 bg-card/50 border border-white/10 rounded-lg text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowNewProject(false)}
+                  className="flex-1 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createProject}
+                  disabled={isCreating || !newProjectName.trim()}
+                  className="flex-1 px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isCreating ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Plus size={14} />
+                  )}
+                  Create
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowNewProject(true)}
+              className="w-full px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus size={14} />
+              New Project
+            </button>
+          )}
         </div>
       </div>
 
@@ -521,9 +590,28 @@ const ProjectView = () => {
                         <Video size={10} />
                       </div>
                     )}
+                    {/* Status Badges */}
+                    {asset.status === "pending" && (
+                      <div className="px-2 py-1 rounded-md bg-amber-500/20 text-amber-400 backdrop-blur-md text-[9px] font-medium">
+                        Pending
+                      </div>
+                    )}
+                    {asset.status === "processing" && (
+                      <div className="px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
+                        <Loader2 size={8} className="animate-spin" />
+                        Processing
+                      </div>
+                    )}
                     {asset.status === "completed" && (
-                      <div className="p-1.5 rounded-md bg-emerald-500/20 text-emerald-400 backdrop-blur-md">
-                        <Sparkles size={10} />
+                      <div className="px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
+                        <CheckCircle size={8} />
+                        Done
+                      </div>
+                    )}
+                    {asset.status === "error" && (
+                      <div className="px-2 py-1 rounded-md bg-red-500/20 text-red-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
+                        <XCircle size={8} />
+                        Error
                       </div>
                     )}
                   </div>
