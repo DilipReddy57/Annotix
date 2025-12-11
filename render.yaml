@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: cortex-ai-backend
+    name: annotix-backend
     env: python
     region: oregon
     plan: free
@@ -9,8 +9,10 @@ services:
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: "3.11"
       - key: DATA_DIR
-        value: /tmp/cortex-data
+        value: /tmp/annotix-data
       - key: MODELS_DIR
-        value: /tmp/cortex-models
+        value: /tmp/annotix-models
+      - key: ENVIRONMENT
+        value: production
