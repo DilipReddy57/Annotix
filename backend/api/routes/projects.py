@@ -41,12 +41,28 @@ async def get_project(project_id: str, session: Session = Depends(get_session)):
     return project
 
 @router.post("/{project_id}/upload")
-async def upload_images(project_id: str, files: List[UploadFile] = File(...), session: Session = Depends(get_session)):
+async def upload_images(
+    project_id: str, 
+    files: List[UploadFile] = File(...), 
+    auto_annotate: bool = False,
+    background_tasks: BackgroundTasks = None,
+    session: Session = Depends(get_session)
+):
+    """
+    Upload images to a project.
+    
+    Args:
+        project_id: The project ID
+        files: List of image files to upload
+        auto_annotate: If True, automatically queue annotation for each image
+        background_tasks: FastAPI background tasks for async annotation
+    """
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
     project_dir = os.path.join(settings.UPLOAD_DIR, project_id)
+    os.makedirs(project_dir, exist_ok=True)
     uploaded_images = []
     
     for file in files:
@@ -57,14 +73,26 @@ async def upload_images(project_id: str, files: List[UploadFile] = File(...), se
         image = Image(
             project_id=project_id,
             filename=file.filename,
-            width=0, # Will be updated during processing
+            status="processing" if auto_annotate else "pending",
+            width=0,
             height=0
         )
         session.add(image)
+        session.commit()
+        session.refresh(image)
         uploaded_images.append(image)
         
-    session.commit()
-    return {"status": "success", "uploaded": len(uploaded_images)}
+        # Auto-annotate if requested
+        if auto_annotate and background_tasks:
+            background_tasks.add_task(run_annotation_task, project_id, image.id)
+            logger.info(f"Queued auto-annotation for {image.filename}")
+        
+    return {
+        "status": "success", 
+        "uploaded": len(uploaded_images),
+        "auto_annotate": auto_annotate,
+        "images": [{"id": img.id, "filename": img.filename, "status": img.status} for img in uploaded_images]
+    }
 
 @router.post("/{project_id}/images/{image_id}/annotate")
 async def annotate_image(project_id: str, image_id: str, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):

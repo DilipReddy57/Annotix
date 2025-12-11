@@ -11,6 +11,8 @@ import {
   Undo2,
   Redo2,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { api } from "../../api/client";
 
@@ -28,6 +30,11 @@ interface EditorProps {
   onSave: (annotations: Annotation[]) => void;
   projectId: string;
   imageId: string;
+  // Navigation props
+  currentIndex?: number;
+  totalImages?: number;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
 const AnnotationEditor: React.FC<EditorProps> = ({
@@ -36,6 +43,10 @@ const AnnotationEditor: React.FC<EditorProps> = ({
   onSave,
   projectId,
   imageId,
+  currentIndex = 0,
+  totalImages = 1,
+  onPrevious,
+  onNext,
 }) => {
   const [annotations, setAnnotations] =
     useState<Annotation[]>(initialAnnotations);
@@ -182,8 +193,35 @@ const AnnotationEditor: React.FC<EditorProps> = ({
           />
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar with Navigation */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-3 bg-card/80 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
+          {/* Previous Image */}
+          <button
+            onClick={onPrevious}
+            disabled={!onPrevious || currentIndex <= 0}
+            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Previous Image"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          {/* Image Counter */}
+          <span className="text-xs font-mono text-muted-foreground min-w-[60px] text-center">
+            {currentIndex + 1} / {totalImages}
+          </span>
+
+          {/* Next Image */}
+          <button
+            onClick={onNext}
+            disabled={!onNext || currentIndex >= totalImages - 1}
+            className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Next Image"
+          >
+            <ChevronRight size={20} />
+          </button>
+
+          <div className="w-px h-4 bg-white/10" />
+
           <button className="text-muted-foreground hover:text-foreground transition-colors">
             <Undo2 size={18} />
           </button>
