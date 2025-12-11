@@ -129,55 +129,39 @@ const Home = () => {
       setError(null);
 
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/projects/`, {
+        // Use dedicated stats endpoint for dashboard data
+        const res = await axios.get(`${API_BASE_URL}/api/projects/stats`, {
           timeout: 5000,
         });
-        const projects = res.data || [];
-
-        let totalAssets = 0;
-        let totalAnnotations = 0;
-        const recentActivity: DashboardStats["recentActivity"] = [];
-
-        for (const project of projects.slice(0, 5)) {
-          try {
-            const projectRes = await axios.get(
-              `${API_BASE_URL}/api/projects/${project.id}`,
-              { timeout: 5000 }
-            );
-            const images = projectRes.data.images || [];
-            totalAssets += images.length;
-
-            for (const img of images) {
-              totalAnnotations += img.annotations?.length || 0;
-              if (recentActivity.length < 5) {
-                recentActivity.push({
-                  id: img.id,
-                  type: "image",
-                  name: img.filename,
-                  project: project.name,
-                  time: "Recently",
-                });
-              }
-            }
-          } catch {
-            // Skip failed projects
-          }
-        }
 
         if (mounted) {
           setStats({
-            totalProjects: projects.length,
-            totalAssets,
-            totalAnnotations,
-            totalClasses: Math.floor(totalAnnotations / 3) || 0,
-            todayAnnotations: Math.min(totalAnnotations, 24),
-            recentActivity,
+            totalProjects: res.data.totalProjects || 0,
+            totalAssets: res.data.totalAssets || 0,
+            totalAnnotations: res.data.totalAnnotations || 0,
+            totalClasses: res.data.totalClasses || 0,
+            todayAnnotations: res.data.todayAnnotations || 0,
+            recentActivity: res.data.recentActivity || [],
           });
         }
       } catch (e: any) {
         console.error("Failed to fetch stats:", e);
         if (mounted) {
-          setError("Backend not available. Start the server to see your data.");
+          // Show dashboard with zeros instead of error, still usable
+          setStats({
+            totalProjects: 0,
+            totalAssets: 0,
+            totalAnnotations: 0,
+            totalClasses: 0,
+            todayAnnotations: 0,
+            recentActivity: [],
+          });
+          // Only show error if backend is completely unreachable
+          if (e.code === "ECONNREFUSED" || e.code === "ERR_NETWORK") {
+            setError(
+              "Backend not available. Start the server to see your data."
+            );
+          }
         }
       } finally {
         if (mounted) setIsLoading(false);

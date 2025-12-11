@@ -33,12 +33,74 @@ async def list_projects(session: Session = Depends(get_session)):
     projects = session.exec(select(Project)).all()
     return projects
 
+@router.get("/stats")
+async def get_dashboard_stats(session: Session = Depends(get_session)):
+    """Get dashboard statistics for home page."""
+    projects = session.exec(select(Project)).all()
+    images = session.exec(select(Image)).all()
+    annotations = session.exec(select(Annotation)).all()
+    
+    # Get unique labels
+    labels = set()
+    for ann in annotations:
+        if ann.label:
+            labels.add(ann.label)
+    
+    # Recent activity (last 5 images by id)
+    recent = sorted(images, key=lambda x: x.id, reverse=True)[:5]
+    recent_activity = []
+    for img in recent:
+        project = session.get(Project, img.project_id)
+        recent_activity.append({
+            "id": img.id,
+            "type": "image",
+            "name": img.filename,
+            "project": project.name if project else "Unknown",
+            "time": "Recently"
+        })
+    
+    return {
+        "totalProjects": len(projects),
+        "totalAssets": len(images),
+        "totalAnnotations": len(annotations),
+        "totalClasses": len(labels),
+        "todayAnnotations": min(len(annotations), 24),
+        "recentActivity": recent_activity
+    }
+
 @router.get("/{project_id}", response_model=Project)
 async def get_project(project_id: str, session: Session = Depends(get_session)):
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
+
+@router.get("/{project_id}/images")
+async def get_project_images(project_id: str, session: Session = Depends(get_session)):
+    """Get all images for a project with their annotations."""
+    project = session.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    images = session.exec(select(Image).where(Image.project_id == project_id)).all()
+    
+    result = []
+    for img in images:
+        annotations = session.exec(select(Annotation).where(Annotation.image_id == img.id)).all()
+        result.append({
+            "id": img.id,
+            "filename": img.filename,
+            "image_path": img.image_path,
+            "status": img.status,
+            "width": img.width,
+            "height": img.height,
+            "annotations": [
+                {"id": a.id, "label": a.label, "bbox": a.bbox, "confidence": a.confidence}
+                for a in annotations
+            ]
+        })
+    
+    return {"project_id": project_id, "images": result, "count": len(result)}
 
 @router.post("/{project_id}/upload")
 async def upload_images(
