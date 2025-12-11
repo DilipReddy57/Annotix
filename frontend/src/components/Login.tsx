@@ -129,7 +129,7 @@ const Login = () => {
 
         <div className="mt-8 text-center">
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-50">
-            Secured by Cortex.ai Enterprise
+            Secured by ANNOTIX Enterprise
           </p>
         </div>
       </div>

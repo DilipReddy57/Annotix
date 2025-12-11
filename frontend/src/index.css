@@ -1,67 +1,76 @@
 @import "tailwindcss";
 
-/* Font Imports - Premium Typography */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+/* ============================================
+   ANNOTIX - AI Annotation Platform
+   Brand Theme: Emerald Tech
+   ============================================ */
+
+/* Font Imports */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap");
 
 /* Tailwind 4 Theme Configuration */
 @theme {
-  /* Font Families */
+  /* Typography */
   --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", "Consolas", monospace;
 
-  /* Color Palette - Modern Indigo/Purple + Warm Accents (Roboflow-inspired) */
-  --color-background: #0f0f14;
-  --color-foreground: #f8fafc;
+  /* ========== ANNOTIX PALETTE ========== */
+  /* Deep backgrounds */
+  --color-background: #09090b;
+  --color-foreground: #fafafa;
 
-  --color-card: #16161d;
-  --color-card-foreground: #f8fafc;
+  /* Surfaces */
+  --color-card: #0f0f12;
+  --color-card-foreground: #fafafa;
+  --color-popover: #151518;
+  --color-popover-foreground: #fafafa;
 
-  --color-popover: #1a1a24;
-  --color-popover-foreground: #f8fafc;
+  /* Primary: Emerald */
+  --color-primary: #10b981;
+  --color-primary-foreground: #022c22;
 
-  /* Primary: Indigo Blue */
-  --color-primary: #6366f1;
-  --color-primary-foreground: #ffffff;
+  /* Secondary */
+  --color-secondary: #1c1c22;
+  --color-secondary-foreground: #a1a1aa;
 
-  /* Secondary: Cool Slate */
-  --color-secondary: #1e1e2a;
-  --color-secondary-foreground: #94a3b8;
+  /* Muted */
+  --color-muted: #18181b;
+  --color-muted-foreground: #71717a;
 
-  --color-muted: #1c1c26;
-  --color-muted-foreground: #64748b;
-
-  /* Accent: Vibrant Teal */
+  /* Accent: Teal */
   --color-accent: #14b8a6;
-  --color-accent-foreground: #ffffff;
+  --color-accent-foreground: #f0fdfa;
 
   /* Status Colors */
-  --color-destructive: #f43f5e;
-  --color-destructive-foreground: #ffffff;
-  --color-success: #10b981;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #fef2f2;
+  --color-success: #22c55e;
   --color-warning: #f59e0b;
 
-  --color-border: #2a2a38;
-  --color-input: #2a2a38;
-  --color-ring: #6366f1;
+  /* Borders */
+  --color-border: #27272a;
+  --color-input: #27272a;
+  --color-ring: #10b981;
 
-  /* Matrix Green (for intro only) */
-  --color-matrix: #00ff41;
+  /* Extended palette */
+  --color-emerald: #10b981;
+  --color-teal: #14b8a6;
+  --color-cyan: #22d3ee;
+  --color-green: #22c55e;
 
-  /* Shadows - Deeper purple glow */
+  /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5),
-    0 4px 6px -4px rgb(0 0 0 / 0.5);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5),
-    0 8px 10px -6px rgb(0 0 0 / 0.5);
-  --shadow-glow: 0 0 20px rgb(99 102 241 / 0.4);
+    0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-glow: 0 0 30px rgb(16 185 129 / 0.25);
 }
 
 /* Global Styles */
 :root {
   color-scheme: dark;
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 * {
@@ -76,10 +85,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar Styling */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -87,34 +96,43 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: var(--color-muted-foreground);
 }
 
-/* Custom Animations */
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-  }
+/* ========== ANIMATIONS ========== */
 
-  .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
+@keyframes rainFall {
+  0% {
+    transform: translateY(-100%);
+    opacity: 1;
   }
-
-  .animate-slide-in-right {
-    animation: slideInRight 0.4s ease-out forwards;
+  85% {
+    opacity: 1;
   }
-
-  .animate-pulse-glow {
-    animation: pulseGlow 2s ease-in-out infinite;
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
   }
+}
 
-  .animate-matrix-fall {
-    animation: matrixFall linear infinite;
+@keyframes orbFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-15px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(25px, 10px) scale(1.02);
   }
 }
 
@@ -130,7 +148,7 @@ body {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -138,49 +156,108 @@ body {
   }
 }
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 @keyframes pulseGlow {
   0%,
   100% {
-    box-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary);
+    box-shadow: 0 0 5px var(--color-primary), 0 0 15px var(--color-primary);
   }
   50% {
-    box-shadow: 0 0 20px var(--color-primary), 0 0 30px var(--color-primary);
+    box-shadow: 0 0 15px var(--color-primary), 0 0 40px var(--color-primary);
   }
 }
 
-@keyframes matrixFall {
+@keyframes shimmer {
   0% {
-    transform: translateY(-100%);
-    opacity: 1;
+    background-position: -200% 0;
   }
   100% {
-    transform: translateY(100vh);
-    opacity: 0;
+    background-position: 200% 0;
   }
 }
 
-/* Glass Effect Utility */
+/* ========== UTILITIES ========== */
 @layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Glass effects */
   .glass {
-    background: rgba(10, 10, 10, 0.8);
-    backdrop-filter: blur(12px);
+    background: rgba(15, 15, 18, 0.8);
+    backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .glass-strong {
-    background: rgba(10, 10, 10, 0.95);
-    backdrop-filter: blur(20px);
+    background: rgba(15, 15, 18, 0.95);
+    backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
+
+  /* Text gradient */
+  .text-gradient-primary {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+  }
+}
+
+/* ========== BUTTON STYLES ========== */
+.btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #022c22;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-muted-foreground);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-foreground);
 }

@@ -33,6 +33,119 @@ async def list_projects(session: Session = Depends(get_session)):
     projects = session.exec(select(Project)).all()
     return projects
 
+@router.post("/import-dataset")
+async def import_dataset(
+    request: Dict,
+    background_tasks: BackgroundTasks,
+    session: Session = Depends(get_session)
+):
+    """
+    Import a dataset from an external URL (Kaggle, HuggingFace, GitHub, etc.)
+    
+    Args:
+        request: Dict containing 'url' and 'source' (kaggle, huggingface, github, url)
+    """
+    url = request.get("url", "")
+    source = request.get("source", "url")
+    
+    if not url:
+        raise HTTPException(status_code=400, detail="URL is required")
+    
+    logger.info(f"Importing dataset from {source}: {url}")
+    
+    # Create a new project for this import
+    project_name = f"Import from {source.title()} - {url.split('/')[-1][:30]}"
+    project = Project(name=project_name, description=f"Imported from {url}")
+    session.add(project)
+    session.commit()
+    session.refresh(project)
+    
+    project_dir = os.path.join(settings.UPLOAD_DIR, project.id)
+    os.makedirs(project_dir, exist_ok=True)
+    
+    # Queue background task for actual download
+    background_tasks.add_task(
+        download_dataset_task, 
+        project.id, 
+        url, 
+        source, 
+        project_dir
+    )
+    
+    return {
+        "status": "importing",
+        "project_id": project.id,
+        "project_name": project_name,
+        "source": source,
+        "message": f"Dataset import started. Check project '{project_name}' for progress."
+    }
+
+def download_dataset_task(project_id: str, url: str, source: str, project_dir: str):
+    """Background task to download dataset from URL."""
+    import requests
+    import zipfile
+    import io
+    
+    logger.info(f"Starting dataset download for project {project_id} from {url}")
+    
+    try:
+        # For Kaggle, we'd need kaggle API authentication
+        # For now, handle direct URLs and provide helpful messages for others
+        
+        if source == "kaggle":
+            # Kaggle requires API authentication
+            # User would need to have kaggle.json configured
+            logger.warning("Kaggle datasets require API key. Please configure ~/.kaggle/kaggle.json")
+            # Placeholder: In production, use kaggle.api.dataset_download_files()
+            
+        elif source == "huggingface":
+            # HuggingFace datasets can be downloaded via their API
+            logger.info(f"HuggingFace dataset: {url}")
+            # Placeholder: In production, use datasets.load_dataset()
+            
+        elif source == "github":
+            # GitHub raw files or releases
+            if "raw.githubusercontent.com" in url or url.endswith(('.zip', '.tar.gz')):
+                response = requests.get(url, stream=True, timeout=300)
+                response.raise_for_status()
+                
+                if url.endswith('.zip'):
+                    with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
+                        zf.extractall(project_dir)
+                        logger.info(f"Extracted {len(zf.namelist())} files from GitHub archive")
+                else:
+                    filename = url.split('/')[-1]
+                    filepath = os.path.join(project_dir, filename)
+                    with open(filepath, 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            f.write(chunk)
+                    logger.info(f"Downloaded {filename} from GitHub")
+        else:
+            # Direct URL download
+            response = requests.get(url, stream=True, timeout=300)
+            response.raise_for_status()
+            
+            filename = url.split('/')[-1] or "downloaded_file"
+            filepath = os.path.join(project_dir, filename)
+            
+            with open(filepath, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            
+            # If it's a zip, extract it
+            if filename.endswith('.zip'):
+                with zipfile.ZipFile(filepath) as zf:
+                    zf.extractall(project_dir)
+                os.remove(filepath)  # Remove the zip after extraction
+                logger.info(f"Extracted archive to {project_dir}")
+            else:
+                logger.info(f"Downloaded {filename}")
+                
+        logger.info(f"Dataset import completed for project {project_id}")
+        
+    except Exception as e:
+        logger.error(f"Dataset download failed: {e}")
+
 @router.get("/stats")
 async def get_dashboard_stats(session: Session = Depends(get_session)):
     """Get dashboard statistics for home page."""

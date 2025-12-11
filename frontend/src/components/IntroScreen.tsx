@@ -17,8 +17,16 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
   const [showSkip, setShowSkip] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
-  // Check visit count
+  // Check visit count and intro mode setting
   useEffect(() => {
+    const introMode = localStorage.getItem("cortex_intro_mode") || "smart";
+
+    // Never mode: skip immediately
+    if (introMode === "never") {
+      onComplete();
+      return;
+    }
+
     const visitCount = parseInt(
       localStorage.getItem("cortex_visits") || "0",
       10
@@ -26,24 +34,30 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
     const newCount = visitCount + 1;
     localStorage.setItem("cortex_visits", newCount.toString());
 
-    // 3rd+ visit: auto-skip
-    if (newCount >= 3) {
-      onComplete();
-      return;
+    // Smart mode: apply visit-based logic
+    if (introMode === "smart") {
+      // 3rd+ visit: auto-skip
+      if (newCount >= 3) {
+        onComplete();
+        return;
+      }
+      // 2nd visit: show skip button
+      if (newCount >= 2) {
+        setShowSkip(true);
+      }
     }
 
-    // 2nd visit: show skip button
-    if (newCount >= 2) {
-      setShowSkip(true);
-    }
+    // Always mode: always show full intro, never auto-skip
+    // (no early return, just proceed with animation)
 
     // Show title after 1.5s
     const titleTimer = setTimeout(() => setShowTitle(true), 1500);
 
-    // Auto-complete after 4s
+    // Auto-complete after 4s (unless "always" mode - then wait for user or 6s)
+    const autoCompleteTime = introMode === "always" ? 6000 : 4000;
     const completeTimer = setTimeout(() => {
       handleExit();
-    }, 4000);
+    }, autoCompleteTime);
 
     return () => {
       clearTimeout(titleTimer);
@@ -51,7 +65,7 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
     };
   }, [onComplete]);
 
-  // Matrix rain effect
+  // Pastel Matrix rain effect
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -72,17 +86,29 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
     const columns = Math.floor(canvas.width / fontSize);
     const drops: number[] = Array(columns).fill(1);
 
+    // Artistic color palette for the rain (Neural Craft theme)
+    const pastelColors = [
+      "#8b5cf6", // Violet (primary)
+      "#10b981", // Emerald
+      "#0ea5e9", // Sky
+      "#ec4899", // Pink
+      "#f59e0b", // Amber
+      "#6366f1", // Indigo
+    ];
+
     // Animation
     const draw = () => {
-      // Semi-transparent black to create trail effect
-      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      // Dark background with slight transparency for trail
+      ctx.fillStyle = "rgba(18, 18, 26, 0.08)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Matrix green text
-      ctx.fillStyle = "#00ff41";
       ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
 
       for (let i = 0; i < drops.length; i++) {
+        // Pick a pastel color based on column
+        const colorIndex = i % pastelColors.length;
+        ctx.fillStyle = pastelColors[colorIndex];
+
         const char =
           MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
         ctx.fillText(char, i * fontSize, drops[i] * fontSize);
@@ -137,8 +163,8 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
                 {/* Glitch Effect Container */}
                 <div className="relative">
                   <h1 className="text-6xl md:text-8xl font-bold font-display tracking-tighter">
-                    <span className="text-white">CORTEX</span>
-                    <span className="text-primary">.AI</span>
+                    <span className="text-white">ANNOT</span>
+                    <span className="text-primary">IX</span>
                   </h1>
 
                   {/* Glitch layers */}
@@ -150,8 +176,8 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
                     }}
                     aria-hidden="true"
                   >
-                    <span>CORTEX</span>
-                    <span>.AI</span>
+                    <span>ANNOT</span>
+                    <span>IX</span>
                   </h1>
                   <h1
                     className="absolute inset-0 text-6xl md:text-8xl font-bold font-display tracking-tighter text-red-400 opacity-70"
@@ -161,8 +187,8 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
                     }}
                     aria-hidden="true"
                   >
-                    <span>CORTEX</span>
-                    <span>.AI</span>
+                    <span>ANNOT</span>
+                    <span>IX</span>
                   </h1>
                 </div>
 

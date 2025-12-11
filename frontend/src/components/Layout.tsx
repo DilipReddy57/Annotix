@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Cpu,
   Settings,
   Bell,
   Search,
@@ -16,6 +15,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import AnnotixLogo from "./ui/annotix-logo";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const notifications = [
     { id: 1, title: "New annotation completed", time: "2 min ago" },
     { id: 2, title: "Project exported successfully", time: "1 hour ago" },
-    { id: 3, title: "Welcome to Cortex.AI!", time: "Today" },
+    { id: 3, title: "Welcome to ANNOTIX!", time: "Today" },
   ];
 
   return (
@@ -56,17 +56,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center gap-8">
             {/* Logo */}
             <motion.div
-              className="flex items-center gap-2.5 cursor-pointer"
+              className="flex items-center cursor-pointer"
               onClick={() => navigate("/")}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30">
-                <Cpu size={20} className="text-primary" />
-              </div>
-              <span className="font-bold text-lg font-display hidden sm:block">
-                CORTEX<span className="text-primary">.AI</span>
-              </span>
+              <AnnotixLogo size="sm" />
             </motion.div>
 
             {/* Desktop Nav */}
@@ -202,7 +197,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <div className="p-4 border-b border-white/5">
                       <p className="font-semibold">User</p>
                       <p className="text-sm text-muted-foreground">
-                        user@cortex.ai
+                        user@annotix.ai
                       </p>
                     </div>
                     <div className="p-2">

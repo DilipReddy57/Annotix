@@ -238,6 +238,71 @@ const SettingsPage = () => {
       case "appearance":
         return (
           <div className="space-y-6">
+            {/* Intro Animation Settings */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Intro Animation</h3>
+              <div className="space-y-3">
+                {[
+                  {
+                    id: "always",
+                    label: "Always Show",
+                    desc: "Play intro on every visit",
+                  },
+                  {
+                    id: "smart",
+                    label: "Smart (Default)",
+                    desc: "Full on 1st, Skip on 2nd, Auto-skip after",
+                  },
+                  {
+                    id: "never",
+                    label: "Never Show",
+                    desc: "Skip intro animation entirely",
+                  },
+                ].map((option) => {
+                  const currentSetting =
+                    localStorage.getItem("cortex_intro_mode") || "smart";
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        localStorage.setItem("cortex_intro_mode", option.id);
+                        if (option.id === "always") {
+                          localStorage.setItem("cortex_visits", "0");
+                        }
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-xl border transition-all text-left",
+                        currentSetting === option.id
+                          ? "border-primary bg-primary/10"
+                          : "border-white/10 hover:border-white/20"
+                      )}
+                    >
+                      <div>
+                        <p className="font-medium">{option.label}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {option.desc}
+                        </p>
+                      </div>
+                      {currentSetting === option.id && (
+                        <Check size={18} className="text-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => {
+                    localStorage.setItem("cortex_visits", "0");
+                    alert(
+                      "Intro history reset! Refresh to see the intro again."
+                    );
+                  }}
+                  className="text-sm text-muted-foreground hover:text-primary underline mt-2"
+                >
+                  Reset Intro History
+                </button>
+              </div>
+            </div>
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Theme</h3>
               <div className="grid grid-cols-3 gap-4">
@@ -269,15 +334,20 @@ const SettingsPage = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Accent Color</h3>
               <div className="flex gap-3">
-                {["#8b5cf6", "#06b6d4", "#22c55e", "#f59e0b", "#ef4444"].map(
-                  (color) => (
-                    <button
-                      key={color}
-                      className="w-10 h-10 rounded-full border-2 border-white/20 hover:border-white/50 transition-all hover:scale-110"
-                      style={{ backgroundColor: color }}
-                    />
-                  )
-                )}
+                {[
+                  { color: "#a78bfa", name: "Lavender" },
+                  { color: "#34d399", name: "Mint" },
+                  { color: "#38bdf8", name: "Sky" },
+                  { color: "#fb7185", name: "Rose" },
+                  { color: "#fbbf24", name: "Amber" },
+                ].map((item) => (
+                  <button
+                    key={item.color}
+                    title={item.name}
+                    className="w-10 h-10 rounded-full border-2 border-white/20 hover:border-white/50 transition-all hover:scale-110"
+                    style={{ backgroundColor: item.color }}
+                  />
+                ))}
               </div>
             </div>
           </div>

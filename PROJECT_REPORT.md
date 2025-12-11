@@ -1,4 +1,4 @@
-# Autonomous Dataset Annotation Agent (SAM 3 + Multi-Agent + RAG)
+# ANNOTIX: Autonomous Dataset Annotation Agent (SAM 3 + Multi-Agent + RAG)
 
 ### **Purpose, Problem Statement, Motivation, and Conceptual Explanation**
 

@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 interface AnnotationRainProps {
   className?: string;
@@ -23,60 +22,51 @@ const ANNOTATION_SYMBOLS = [
   "⬢",
   "⊡",
   "⊞",
-  "⊟",
-  "⊠",
   "⊕",
-  "⊖",
   "⊗",
-  "⊘",
   "⌘",
-  "⌥",
-  "⎔",
-  "⏣",
-  "⏢",
-  "⏤",
-  "⏥",
   "car",
   "dog",
   "cat",
-  "box",
   "mask",
   "0.95",
   "0.87",
   "0.92",
-  "0.99",
-  "0.78",
   "SAM",
   "AI",
   "ML",
-  "DL",
-  "CV",
   "bbox",
   "segm",
   "poly",
-  "mask",
   "label",
 ];
 
 interface Drop {
   id: number;
   x: number;
-  speed: number;
+  duration: number;
   delay: number;
   symbols: string[];
-  opacity: number;
+  colorVar: string;
 }
 
 const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Color palette - rich, artistic colors
+  const colors = [
+    "rgb(139, 92, 246)", // Violet
+    "rgb(16, 185, 129)", // Emerald
+    "rgb(59, 130, 246)", // Blue
+    "rgb(236, 72, 153)", // Pink
+    "rgb(245, 158, 11)", // Amber
+  ];
 
-  // Generate rain drops
+  // Generate rain drops - memoized for performance
   const drops = useMemo(() => {
     const dropList: Drop[] = [];
-    const numDrops = 25; // Number of vertical streams
+    const numDrops = 18; // Optimized drop count
 
     for (let i = 0; i < numDrops; i++) {
-      const symbolCount = 8 + Math.floor(Math.random() * 12);
+      const symbolCount = 6 + Math.floor(Math.random() * 8);
       const symbols = Array.from(
         { length: symbolCount },
         () =>
@@ -87,11 +77,11 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
 
       dropList.push({
         id: i,
-        x: (i / numDrops) * 100 + (Math.random() * 4 - 2), // Spread across width
-        speed: 15 + Math.random() * 20, // 15-35 seconds
-        delay: Math.random() * 10, // Stagger start
+        x: (i / numDrops) * 100 + (Math.random() * 4 - 2),
+        duration: 12 + Math.random() * 15, // 12-27 seconds
+        delay: Math.random() * 8,
         symbols,
-        opacity: 0.1 + Math.random() * 0.2, // 0.1-0.3 opacity
+        colorVar: colors[i % colors.length],
       });
     }
 
@@ -100,55 +90,96 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
 
   return (
     <div
-      ref={containerRef}
       className={`fixed inset-0 overflow-hidden pointer-events-none ${className}`}
       style={{ zIndex: 0 }}
     >
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+      {/* Animated gradient background */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          background: `
+            radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 60%)
+          `,
+        }}
+      />
 
+      {/* Rain drops - CSS animation only */}
       {drops.map((drop) => (
-        <motion.div
+        <div
           key={drop.id}
-          className="absolute top-0 flex flex-col gap-1 font-mono text-xs"
+          className="absolute top-0 flex flex-col gap-0.5 font-mono"
           style={{
             left: `${drop.x}%`,
-            opacity: drop.opacity,
-          }}
-          initial={{ y: "-100%" }}
-          animate={{ y: "100vh" }}
-          transition={{
-            duration: drop.speed,
-            delay: drop.delay,
-            repeat: Infinity,
-            ease: "linear",
+            animation: `rainFall ${drop.duration}s linear ${drop.delay}s infinite`,
+            willChange: "transform",
           }}
         >
-          {drop.symbols.map((symbol, idx) => (
-            <span
-              key={idx}
-              className={`
-                ${idx === 0 ? "text-primary brightness-150" : ""}
-                ${idx === 1 ? "text-primary brightness-125" : ""}
-                ${idx === 2 ? "text-primary/80" : ""}
-                ${idx > 2 ? "text-primary/40" : ""}
-                ${symbol.length > 2 ? "text-[8px]" : "text-sm"}
-              `}
-              style={{
-                textShadow: idx < 3 ? "0 0 10px currentColor" : "none",
-              }}
-            >
-              {symbol}
-            </span>
-          ))}
-        </motion.div>
+          {drop.symbols.map((symbol, idx) => {
+            const isHead = idx < 3;
+            const opacity =
+              idx === 0 ? 0.9 : idx === 1 ? 0.7 : idx === 2 ? 0.5 : 0.2;
+            const fontSize = symbol.length > 2 ? "8px" : "11px";
+
+            return (
+              <span
+                key={idx}
+                className="leading-tight"
+                style={{
+                  color: drop.colorVar,
+                  opacity,
+                  fontSize,
+                  textShadow: isHead ? `0 0 12px ${drop.colorVar}` : "none",
+                  filter: isHead ? "brightness(1.3)" : "none",
+                }}
+              >
+                {symbol}
+              </span>
+            );
+          })}
+        </div>
       ))}
 
-      {/* Additional glow effects */}
-      <div className="absolute top-1/4 left-1/3 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+      {/* Floating orbs - subtle ambient glow */}
       <div
-        className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-accent/5 rounded-full blur-3xl animate-pulse"
-        style={{ animationDelay: "1s" }}
+        className="absolute w-96 h-96 rounded-full blur-3xl"
+        style={{
+          top: "15%",
+          left: "10%",
+          background:
+            "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)",
+          animation: "orbFloat 20s ease-in-out infinite",
+        }}
+      />
+      <div
+        className="absolute w-72 h-72 rounded-full blur-3xl"
+        style={{
+          bottom: "20%",
+          right: "15%",
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)",
+          animation: "orbFloat 25s ease-in-out infinite reverse",
+        }}
+      />
+      <div
+        className="absolute w-48 h-48 rounded-full blur-3xl"
+        style={{
+          top: "50%",
+          right: "30%",
+          background:
+            "radial-gradient(circle, rgba(236, 72, 153, 0.05) 0%, transparent 70%)",
+          animation: "orbFloat 18s ease-in-out 3s infinite",
+        }}
+      />
+
+      {/* Gradient fade at bottom for content readability */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-64 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to top, var(--color-background) 0%, transparent 100%)",
+        }}
       />
     </div>
   );

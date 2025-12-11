@@ -1,4 +1,4 @@
-# Product-Grade Autonomous Annotation System Specification
+# ANNOTIX: Product-Grade Autonomous Annotation System Specification
 
 ## 1. Overview / Goals
 

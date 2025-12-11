@@ -1,15 +1,15 @@
-# Cortex-AI: Autonomous Annotation Platform with SAM3
+# ANNOTIX: Autonomous AI Annotation Platform
 
 <div align="center">
 
-![Cortex-AI](https://img.shields.io/badge/Cortex-AI-blue?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4LTggOCAzLjU5IDggOC0zLjU5IDgtOCA4eiIvPjwvc3ZnPg==)
-[![Python](https://img.shields.io/badge/Python-3.12+-blue?style=flat-square&logo=python)](https://python.org)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.5+-red?style=flat-square&logo=pytorch)](https://pytorch.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18+-61DAFB?style=flat-square&logo=react)](https://reactjs.org)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+![ANNOTIX](https://img.shields.io/badge/ANNOT-IX-10b981?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+PHJlY3QgeD0iNCIgeT0iNCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iNCIgc3Ryb2tlPSIjMTBiOTgxIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWRhc2hhcnJheT0iOCA0IiBmaWxsPSJub25lIi8+PGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMyIgZmlsbD0iIzEwYjk4MSIvPjwvc3ZnPg==)
+[![Python](https://img.shields.io/badge/Python-3.12+-10b981?style=flat-square&logo=python)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.5+-ef4444?style=flat-square&logo=pytorch)](https://pytorch.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-059669?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-19+-61DAFB?style=flat-square&logo=react)](https://reactjs.org)
+[![License](https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square)](LICENSE)
 
-**Enterprise-grade autonomous annotation platform powered by SAM3 (Segment Anything with Concepts)**
+**Enterprise-grade autonomous annotation platform powered by SAM3 (Segment Anything Model 3)**
 
 [Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [API](#-api) • [Contributing](#-contributing)
 
@@ -19,7 +19,7 @@
 
 ## 🎯 Overview
 
-Cortex-AI is a state-of-the-art data annotation platform that leverages Meta's **SAM3 (Segment Anything with Concepts)** model for intelligent, autonomous image and video annotation. Unlike traditional annotation tools, Cortex-AI uses advanced AI agents to automate the annotation workflow while maintaining human-level accuracy.
+**ANNOTIX** is a state-of-the-art data annotation platform that leverages Meta's **SAM3** model for intelligent, autonomous image and video annotation. Unlike traditional annotation tools, ANNOTIX uses advanced AI agents to automate the annotation workflow while maintaining human-level accuracy.
 
 ### What Makes SAM3 Special?
 
@@ -57,13 +57,22 @@ SAM3 introduces **open-vocabulary text prompts** - you can segment ANY concept u
 - **Quality Assurance**: Multi-metric confidence fusion and validation
 - **Scene Graphs**: Spatial relationship detection between objects
 - **COCO Export**: Standard format export for ML pipelines
+- **Dataset Import**: Import datasets directly from Kaggle, HuggingFace, or GitHub
+
+### 🎨 Modern UI/UX
+
+- **Artistic Design**: Handcrafted "Emerald Tech" theme with premium aesthetics
+- **SVG Logo**: Custom bounding-box + crosshair logo representing annotation
+- **Bento Grid Dashboard**: Asymmetric layout for visual hierarchy
+- **Smooth Animations**: GPU-accelerated CSS animations
+- **Matrix Rain Effect**: Stylized annotation rain background
 
 ### 📊 Enterprise Features
 
 - **Scalable Architecture**: Celery task queues, Redis caching
 - **Production Monitoring**: Prometheus metrics, structured logging
 - **REST API**: Full FastAPI backend with authentication
-- **Real-time Dashboard**: React frontend with analytics
+- **Real-time Dashboard**: React 19 frontend with analytics
 
 ---
 
@@ -79,8 +88,8 @@ SAM3 introduces **open-vocabulary text prompts** - you can segment ANY concept u
 
 ```bash
 # Clone the repository
-git clone https://github.com/DilipReddy57/Cortex-Ai.git
-cd Cortex-Ai
+git clone https://github.com/DilipReddy57/Cortex-AI.git
+cd Cortex-AI
 
 # Create virtual environment
 python -m venv venv
@@ -178,7 +187,7 @@ python -m backend.cli analytics
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        CORTEX-AI                                │
+│                         ANNOTIX                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
 │  │   Frontend  │  │   FastAPI   │  │    CLI      │   Interfaces │
@@ -198,15 +207,18 @@ python -m backend.cli analytics
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │                 ADVANCED AI AGENTS                        │   │
 │  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │   │
-│  │  │   LLM   │  │ Active  │  │Embedding│  │MultiMod │      │   │
-│  │  │  Agent  │  │Learning │  │   Viz   │  │   RAG   │      │   │
+│  │  │ Active  │  │ Context │  │Instance │  │ Scene   │      │   │
+│  │  │Learning │  │ Learner │  │Learner  │  │ Graph   │      │   │
 │  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │  ChromaDB   │  │   SQLite    │  │  Celery     │   Storage   │
-│  │  (Vectors)  │  │  (Metadata) │  │  (Queue)    │              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    DATA LAYER                             │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐                   │   │
+│  │  │ SQLite  │  │ChromaDB │  │  File   │                   │   │
+│  │  │Database │  │ Vectors │  │ Storage │                   │   │
+│  │  └─────────┘  └─────────┘  └─────────┘                   │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -215,119 +227,129 @@ python -m backend.cli analytics
 ## 📁 Project Structure
 
 ```
-Cortex-Ai/
+annotix/
 ├── backend/
-│   ├── agents/                 # AI Agent modules
-│   │   ├── segmentation.py     # SAM3 segmentation agent
-│   │   ├── rag.py              # RAG for label consistency
-│   │   ├── llm_agent.py        # LLM for auto-prompts
-│   │   ├── active_learning.py  # Smart sample selection
-│   │   ├── multimodal_rag.py   # Visual + text RAG
-│   │   ├── embedding_visualizer.py  # UMAP/t-SNE
-│   │   ├── tracking_agent.py   # Video tracking
+│   ├── agents/           # AI agents (SAM3, RAG, QA, etc.)
+│   │   ├── segmentation.py    # SAM3 agent
+│   │   ├── rag.py             # RAG agent with ChromaDB
+│   │   ├── qa.py              # Quality assurance
+│   │   ├── active_learning.py # Sample selection
 │   │   └── ...
-│   ├── api/                    # FastAPI routes
-│   ├── core/                   # Config, database, models
-│   ├── pipeline/               # Annotation orchestrator
-│   ├── sam3/                   # SAM3 model (submodule)
-│   └── utils/                  # Utilities
-├── frontend/                   # React UI
+│   ├── api/              # FastAPI routes
+│   │   └── routes/
+│   ├── core/             # Config, models, database
+│   ├── pipeline/         # Orchestrator
+│   └── main.py           # Entry point
+├── frontend/
 │   ├── src/
-│   │   ├── components/         # UI components
-│   │   ├── pages/              # Page views
-│   │   └── api/                # API client
-│   └── ...
-├── requirements.txt            # Python dependencies
-├── README.md                   # This file
-└── ...
+│   │   ├── components/   # React components
+│   │   │   ├── ui/       # UI primitives (annotix-logo, etc.)
+│   │   │   ├── dashboard/# Dashboard components
+│   │   │   └── ...
+│   │   ├── index.css     # Emerald theme
+│   │   └── App.tsx       # Main app
+│   └── package.json
+├── data/                 # Uploads and exports
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## 🔌 API Reference
+## 🔌 API Endpoints
 
-### Endpoints
+### Projects
 
-| Endpoint          | Method | Description               |
-| ----------------- | ------ | ------------------------- |
-| `/api/tasks`      | POST   | Create annotation task    |
-| `/api/tasks/{id}` | GET    | Get task status           |
-| `/api/projects`   | CRUD   | Project management        |
-| `/api/qa`         | POST   | Quality assurance checks  |
-| `/api/export`     | GET    | Export annotations (COCO) |
-| `/api/auth`       | POST   | Authentication            |
-| `/health`         | GET    | Health check              |
+| Method | Endpoint                           | Description            |
+| ------ | ---------------------------------- | ---------------------- |
+| POST   | `/api/projects/`                   | Create new project     |
+| GET    | `/api/projects/`                   | List all projects      |
+| GET    | `/api/projects/stats`              | Dashboard statistics   |
+| POST   | `/api/projects/import-dataset`     | Import from Kaggle/URL |
+| POST   | `/api/projects/{id}/upload`        | Upload images          |
+| POST   | `/api/projects/{id}/videos/upload` | Upload videos          |
 
-### Example Request
+### Annotation
+
+| Method | Endpoint                                      | Description         |
+| ------ | --------------------------------------------- | ------------------- |
+| POST   | `/api/projects/{id}/images/{img_id}/annotate` | Run annotation      |
+| POST   | `/api/projects/{id}/images/{img_id}/segment`  | Interactive segment |
+| POST   | `/api/projects/{id}/videos/{vid_id}/annotate` | Video annotation    |
+
+### Export
+
+| Method | Endpoint                        | Description      |
+| ------ | ------------------------------- | ---------------- |
+| GET    | `/api/export/{project_id}/coco` | Export COCO JSON |
+
+---
+
+## 🎨 UI Theme
+
+ANNOTIX uses the **Emerald Tech** theme:
+
+| Element    | Color    | Hex       |
+| ---------- | -------- | --------- |
+| Primary    | Emerald  | `#10b981` |
+| Accent     | Teal     | `#14b8a6` |
+| Background | Carbon   | `#09090b` |
+| Card       | Charcoal | `#0f0f12` |
+| Success    | Green    | `#22c55e` |
+| Warning    | Amber    | `#f59e0b` |
+| Error      | Red      | `#ef4444` |
+
+### Typography
+
+- **Display**: Outfit (headings)
+- **Sans**: Inter (body)
+- **Mono**: JetBrains Mono (code)
+
+---
+
+## 🧪 Development
+
+### Run Tests
 
 ```bash
-curl -X POST "http://localhost:8000/api/tasks" \
-  -H "Content-Type: application/json" \
-  -d '{"image_path": "image.jpg", "prompt": "cars"}'
+# Backend tests
+pytest tests/
+
+# E2E test
+python test_e2e.py
 ```
 
----
+### Build for Production
 
-## 🔧 Configuration
+```bash
+# Frontend
+cd frontend
+npm run build
 
-Environment variables (`.env`):
-
-```env
-# Required for SAM3 model download
-HF_TOKEN=your_huggingface_token
-
-# Optional: LLM for auto-prompts
-GEMINI_API_KEY=your_gemini_key
-
-# Database
-DATABASE_URL=sqlite:///database.db
-
-# Device
-DEVICE=cuda  # or cpu
+# The dist/ folder can be served statically
 ```
-
----
-
-## 📈 Performance
-
-| Metric                  | Value                      |
-| ----------------------- | -------------------------- |
-| SAM3 Concepts           | 270,000+                   |
-| Human-level Performance | 75-80%                     |
-| Annotation Speed        | ~40x faster than manual    |
-| GPU Memory              | ~4GB (GTX 1650 compatible) |
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-- [Meta AI - SAM3](https://github.com/facebookresearch/sam3) - Segment Anything with Concepts
-- [Google - Gemini](https://ai.google.dev/) - LLM for auto-prompts
-- [ChromaDB](https://www.trychroma.com/) - Vector database for RAG
+- **Meta AI** - SAM3 (Segment Anything Model 3)
+- **Google** - Gemini API for LLM integration
+- **Hugging Face** - Model hosting and transformers library
+- **ChromaDB** - Vector database for RAG
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by Dilip Reddy**
+**Built with ❤️ by [Dilip Reddy](https://github.com/DilipReddy57)**
 
-[⭐ Star this repo](https://github.com/DilipReddy57/Cortex-Ai) • [🐛 Report Bug](https://github.com/DilipReddy57/Cortex-Ai/issues) • [💡 Request Feature](https://github.com/DilipReddy57/Cortex-Ai/issues)
+[![GitHub](https://img.shields.io/badge/GitHub-DilipReddy57-10b981?style=flat-square&logo=github)](https://github.com/DilipReddy57)
 
 </div>
