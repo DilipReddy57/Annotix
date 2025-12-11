@@ -60,6 +60,25 @@ const AnnotationEditor: React.FC<EditorProps> = ({
     setAnnotations(initialAnnotations.map((a) => ({ ...a, visible: true })));
   }, [initialAnnotations]);
 
+  // Color palette for different object instances
+  const instanceColors = [
+    "#818cf8", // indigo
+    "#f472b6", // pink
+    "#34d399", // emerald
+    "#fbbf24", // amber
+    "#60a5fa", // blue
+    "#a78bfa", // violet
+    "#fb7185", // rose
+    "#2dd4bf", // teal
+    "#fb923c", // orange
+    "#4ade80", // green
+    "#c084fc", // purple
+    "#38bdf8", // sky
+  ];
+
+  const getInstanceColor = (index: number) =>
+    instanceColors[index % instanceColors.length];
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -73,27 +92,35 @@ const AnnotationEditor: React.FC<EditorProps> = ({
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
 
-      annotations.forEach((ann) => {
+      annotations.forEach((ann, index) => {
         if (!ann.visible) return;
         const [x, y, w, h] = ann.bbox;
+        const color = getInstanceColor(index);
+        const isSelected = selectedId === ann.id;
 
-        ctx.strokeStyle =
-          selectedId === ann.id ? "#818cf8" : "rgba(255, 255, 255, 0.5)";
-        ctx.lineWidth = selectedId === ann.id ? 3 : 2;
-        ctx.setLineDash(selectedId === ann.id ? [] : [4, 4]);
+        // Draw bounding box with instance color
+        ctx.strokeStyle = isSelected ? color : `${color}99`; // 99 = 60% opacity
+        ctx.lineWidth = isSelected ? 3 : 2;
+        ctx.setLineDash(isSelected ? [] : [4, 4]);
         ctx.strokeRect(x, y, w, h);
         ctx.setLineDash([]);
 
-        if (selectedId === ann.id) {
-          ctx.fillStyle = "#818cf8";
-          ctx.font = "bold 14px Inter";
-          const text = `${ann.label} ${(ann.score * 100).toFixed(0)}%`;
-          const textWidth = ctx.measureText(text).width;
-          ctx.fillRect(x, y - 24, textWidth + 10, 24);
-          ctx.fillStyle = "#ffffff";
-          ctx.fillText(text, x + 5, y - 7);
+        // Draw label for all objects (not just selected)
+        const text = `${ann.label} ${(ann.score * 100).toFixed(0)}%`;
+        const textWidth = ctx.measureText(text).width;
 
-          ctx.fillStyle = "rgba(129, 140, 248, 0.1)";
+        // Label background
+        ctx.fillStyle = isSelected ? color : `${color}CC`; // CC = 80% opacity
+        ctx.fillRect(x, y - 24, textWidth + 10, 24);
+
+        // Label text
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 14px Inter";
+        ctx.fillText(text, x + 5, y - 7);
+
+        // Fill overlay for selected
+        if (isSelected) {
+          ctx.fillStyle = `${color}1A`; // 1A = 10% opacity
           ctx.fillRect(x, y, w, h);
         }
       });
