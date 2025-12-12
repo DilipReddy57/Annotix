@@ -1,5 +1,7 @@
 import os
-from huggingface_hub import HfFolder
+import sys
+from huggingface_hub import login, HfFolder
+from transformers import AutoModel, AutoProcessor
 
 def check_hf_auth():
     """Checks if the user is logged into Hugging Face."""

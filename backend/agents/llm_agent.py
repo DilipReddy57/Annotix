@@ -13,8 +13,10 @@ import base64
 import json
 from typing import Dict, Any, List, Optional
 from PIL import Image
+import io
 
 from backend.core.logger import get_logger
+from backend.core.config import settings
 
 logger = get_logger("llm_agent")
 
@@ -128,6 +130,7 @@ Example: [{{"prompt": "red car", "confidence": 0.9, "reason": "visible"}}]"""
     
     def _analyze_with_gemini(self, image_path: str, prompt: str) -> List[Dict[str, Any]]:
         """Analyze image using Gemini."""
+        import google.generativeai as genai
         
         img = Image.open(image_path)
         response = self.model.generate_content([prompt, img])

@@ -7,10 +7,12 @@ Provides endpoints for:
 - Getting suggestions based on learned patterns
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from sqlmodel import Session
 
+from backend.core.database import get_session
 from backend.core.logger import get_logger
 from backend.agents.instance_learner import InstanceLearner
 from backend.agents.context_learner import ContextLearner

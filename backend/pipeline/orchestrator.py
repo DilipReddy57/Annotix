@@ -18,6 +18,7 @@ Enhanced with:
 This orchestrator coordinates all agents for autonomous annotation.
 """
 
+import os
 import numpy as np
 from typing import Dict, Any, List, Optional
 from PIL import Image

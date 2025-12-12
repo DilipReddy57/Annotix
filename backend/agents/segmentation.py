@@ -25,6 +25,7 @@ sam3_path = os.path.join(os.path.dirname(__file__), '..', 'sam3')
 if sam3_path not in sys.path:
     sys.path.insert(0, sam3_path)
 
+from backend.core.config import settings
 from backend.core.logger import get_logger
 
 logger = get_logger("segmentation")
@@ -134,7 +135,7 @@ class SAM3Agent:
         
         try:
             # Import SAM 3
-            from sam3.model_builder import build_sam3_image_model
+            from sam3.model_builder import build_sam3_image_model, build_sam3_video_predictor
             from sam3.model.sam3_image_processor import Sam3Processor
             
             # Load image model

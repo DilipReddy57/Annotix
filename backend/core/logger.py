@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import Any
 
 # Configure logging
 logging.basicConfig(

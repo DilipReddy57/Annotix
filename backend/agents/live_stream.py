@@ -15,18 +15,22 @@ Use Cases:
 - Live retail analytics
 """
 
+import os
 import cv2
 import base64
+import asyncio
 import threading
 import time
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from queue import Queue
+from queue import Queue, Empty
+from datetime import datetime
 
 import numpy as np
 
 from backend.core.logger import get_logger
+from backend.core.config import settings
 
 logger = get_logger("live_stream")
 

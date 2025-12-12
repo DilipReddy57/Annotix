@@ -9,11 +9,12 @@ Provides endpoints for:
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
 import asyncio
 import base64
 
 from backend.core.logger import get_logger
-from backend.agents.live_stream import live_stream_agent
+from backend.agents.live_stream import live_stream_agent, LiveStreamAgent
 from backend.agents.counting_agent import CountingAgent
 
 router = APIRouter()

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from typing import Dict, Any
 from sqlmodel import Session
-from backend.core.models import Project
+from backend.core.models import Project, Image, Annotation
 from backend.core.database import get_session
 from backend.core.logger import get_logger
 import datetime

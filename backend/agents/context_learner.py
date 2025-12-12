@@ -16,11 +16,12 @@ Features:
 
 import os
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Set
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field, asdict
 
 from backend.core.logger import get_logger
+from backend.core.config import settings
 
 logger = get_logger("context_learner")
 

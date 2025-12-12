@@ -8,7 +8,8 @@ CLIP is fast (~50ms per crop) and provides semantically meaningful embeddings.
 import torch
 import numpy as np
 from PIL import Image
-from typing import Optional, List
+from typing import Optional, List, Tuple
+from functools import lru_cache
 
 from backend.core.logger import get_logger
 

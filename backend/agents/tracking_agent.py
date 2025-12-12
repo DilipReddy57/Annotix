@@ -10,8 +10,9 @@ This agent provides:
 
 import os
 import cv2
+import logging
 import numpy as np
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from backend.core.logger import get_logger
 
