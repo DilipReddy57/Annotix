@@ -1,229 +1,277 @@
-# ANNOTIX: Autonomous Dataset Annotation Agent (SAM 3 + Multi-Agent + RAG)
+# ANNOTIX: Autonomous Dataset Annotation Agent
 
-### **Purpose, Problem Statement, Motivation, and Conceptual Explanation**
+### SAM3 + Multi-Agent + RAG Architecture
+
+**Project Report - December 2024**
 
 ---
 
-# **1. Purpose of the Project**
+## 1. Purpose of the Project
 
-The purpose of this project is to **automatically create high-quality, large-scale annotated datasets** for computer vision tasks such as detection, segmentation, and tracking **without requiring human labeling effort**.
+The purpose of ANNOTIX is to **automatically create high-quality, large-scale annotated datasets** for computer vision tasks such as detection, segmentation, and tracking **without requiring human labeling effort**.
 
 The system uses:
-• **SAM 3** for segmentation
-• A **multi-agent framework** for label assignment and verification
-• **RAG** for maintaining label consistency over long datasets
 
-The goal is to build a pipeline that can **convert raw, unlabelled images or videos into COCO-style machine-learning–ready datasets**, enabling teams to train models faster and more accurately.
+- **SAM3** (Segment Anything Model 3) for state-of-the-art segmentation
+- A **multi-agent framework** for label assignment and verification
+- **RAG** (Retrieval-Augmented Generation) for maintaining label consistency
+- **LLM Integration** (Google Gemini) for intelligent prompt generation
+
+The goal is to build a pipeline that can **convert raw, unlabeled images or videos into COCO-style machine-learning-ready datasets**, enabling teams to train models faster and more accurately.
 
 ---
 
-# **2. Why This Project Is Needed**
+## 2. Why This Project Is Needed
 
-### **Manual dataset annotation is one of the biggest bottlenecks in AI/ML development.**
+### Manual dataset annotation is one of the biggest bottlenecks in AI/ML development.
 
 Today, computer vision datasets require:
-• thousands to millions of annotated images
-• precise segmentation masks
-• consistent labels across the dataset
-• quality assurance for correctness
+
+- Thousands to millions of annotated images
+- Precise segmentation masks
+- Consistent labels across the dataset
+- Quality assurance for correctness
 
 **Human annotation is extremely slow, expensive, and inconsistent.**
 A skilled annotator can only annotate ~100–200 images/day, and accuracy varies.
 
 For companies building AI models, dataset creation often consumes:
 
-• 40–60 percent of project time
-• 50–70 percent of total budget
-• massive workforce for labeling tasks
+- 40–60 percent of project time
+- 50–70 percent of total budget
+- Massive workforce for labeling tasks
 
 This slows down model development and limits rapid iterations.
 
 ---
 
-# **3. Problem Statement**
+## 3. Problem Statement
 
-### **"How can we automatically generate accurate, consistent, high-quality segmentation annotations for large-scale image or video datasets without human effort?"**
+### "How can we automatically generate accurate, consistent, high-quality segmentation annotations for large-scale image or video datasets without human effort?"
 
 More specifically:
 
-1. Raw datasets contain millions of frames that are unlabelled.
-2. Manual annotation is slow and error-prone.
-3. Label inconsistency (e.g., helmet vs headgear) reduces model accuracy.
-4. Existing segmentation models only give masks but not validated labels.
-5. There is no pipeline that combines segmentation, classification, QA, and consistency checks autonomously.
+1. Raw datasets contain millions of frames that are unlabeled
+2. Manual annotation is slow and error-prone
+3. Label inconsistency (e.g., "helmet" vs "headgear") reduces model accuracy
+4. Existing segmentation models only give masks but not validated labels
+5. There is no pipeline that combines segmentation, classification, QA, and consistency checks autonomously
 
-The project solves all these problems with an **intelligent, agent-based automated pipeline**.
-
----
-
-# **4. Motivation Behind the Project**
-
-### **Why SAM 3?**
-
-SAM 3 provides highly accurate object and region segmentation _without_ requiring training.
-It works on any domain: street scenes, medical, retail, surveillance, etc.
-
-### **Why Multi-Agent Architecture?**
-
-A single model cannot handle all tasks.
-Different AI agents can specialize:
-
-• **Segmentation Agent**: Handles mask creation.
-• **Classification Agent**: Assigns semantic labels using CLIP/Vision models.
-• **Quality Assurance (QA) Agent**: Validates precision and removes artifacts.
-• **RAG Consistency Agent**: Ensures naming conventions match historical data.
-• **Final Aggregator Agent**: Formats data into COCO/YOLO standards.
-
-This modularity makes the system:
-• more interpretable
-• easily upgradeable
-• closer to real-world enterprise systems
-
-### **Why RAG?**
-
-Labels must remain consistent across thousands of images.
-RAG retrieves past annotations so the system never changes naming conventions or produce drift.
+ANNOTIX solves all these problems with an **intelligent, agent-based automated pipeline**.
 
 ---
 
-# **5. How the Project Works (Conceptually)**
+## 4. Key Features Implemented
 
-Here is the **step-by-step conceptual explanation**:
+### Core AI Pipeline
 
-### **Step 1: Input Collection**
+| Feature           | Description                                     | Status      |
+| ----------------- | ----------------------------------------------- | ----------- |
+| SAM3 Segmentation | Open-vocabulary detection with 270K+ concepts   | ✅ Complete |
+| Text Prompts      | Natural language annotation instructions        | ✅ Complete |
+| Video Tracking    | Temporal propagation with object ID persistence | ✅ Complete |
+| Multi-Modal RAG   | Visual + text embeddings for consistency        | ✅ Complete |
+| Active Learning   | Smart sample selection                          | ✅ Complete |
+| COCO Export       | Standard ML format export                       | ✅ Complete |
 
-User uploads raw images or videos.
+### AI Agents
 
-### **Step 2: Segmentation Agent (SAM 3)**
+| Agent                 | Purpose                           | Status      |
+| --------------------- | --------------------------------- | ----------- |
+| Segmentation Agent    | SAM3-powered mask generation      | ✅ Complete |
+| Classification Agent  | CLIP-based semantic labeling      | ✅ Complete |
+| RAG Agent             | Label consistency via ChromaDB    | ✅ Complete |
+| Multi-Modal RAG Agent | Combined image + text embeddings  | ✅ Complete |
+| QA Agent              | Confidence scoring and validation | ✅ Complete |
+| Active Learning Agent | Uncertainty-based selection       | ✅ Complete |
+| Context Learner       | Domain adaptation                 | ✅ Complete |
+| Instance Learner      | Few-shot object learning          | ✅ Complete |
+| Counting Agent        | Object counting with density      | ✅ Complete |
+| Tracking Agent        | Video object tracking             | ✅ Complete |
+| Scene Graph Engine    | Spatial relationships             | ✅ Complete |
+| LLM Agent             | Gemini-powered prompts            | ✅ Complete |
+| Live Stream Agent     | Real-time processing              | ✅ Complete |
+| Embedding Visualizer  | UMAP/t-SNE clustering             | ✅ Complete |
 
-• Identifies objects
-• Generates masks
-• Extracts polygons and bounding boxes
+### Web Application
 
-This handles the hardest part of annotation: mask creation.
-
-### **Step 3: Classification Agent**
-
-• For each object, computes CLIP embeddings
-• Matches against known class embeddings
-• Assigns best class label
-
-Labels are created automatically.
-
-### **Step 4: Quality Assurance (QA) Agent**
-
-• Validates mask precision
-• Detects incorrect labels
-• Removes duplicates
-• Fixes overlapping masks
-
-Ensures annotation quality is high.
-
-### **Step 5: RAG Consistency Agent**
-
-• Looks up previous dataset annotations
-• Prevents label drift (car vs automobile)
-• Ensures labeling style stays uniform
-
-This step is crucial for large datasets.
-
-### **Step 6: Aggregator Agent**
-
-• Combines all results
-• Generates final COCO JSON annotation file
-
-The dataset becomes ready for ML training.
-
----
-
-# **6. What Problem Are We Ultimately Solving?**
-
-You are solving **the dataset bottleneck problem** in machine learning.
-
-This project eliminates:
-• manual drawing of segmentation masks
-• human errors in labeling
-• inconsistent labels
-• time delays in dataset preparation
-• lack of standard formatting
-
-Instead, it provides:
-• fully automated annotations
-• consistent naming conventions
-• high-quality segmentation
-• fast pipeline suitable for large datasets
-
-This is extremely relevant to companies working on:
-• multimodal AI
-• evaluation pipelines
-• vision systems
-• safety analysis
-• model alignment
-• data-centric AI
+| Feature             | Description                      | Status      |
+| ------------------- | -------------------------------- | ----------- |
+| Modern Dashboard    | Bento grid layout with stats     | ✅ Complete |
+| Project Management  | Create, import, manage projects  | ✅ Complete |
+| Image Gallery       | Grid view with status indicators | ✅ Complete |
+| Dataset Import      | Kaggle, HuggingFace, GitHub, URL | ✅ Complete |
+| Annotation Editor   | Interactive annotation interface | ✅ Complete |
+| Analytics           | Progress charts and metrics      | ✅ Complete |
+| Settings            | Comprehensive configuration      | ✅ Complete |
+| User Authentication | JWT-based auth                   | ✅ Complete |
+| Pastel Theme        | Modern, soft color palette       | ✅ Complete |
+| Smart Intro         | Animated onboarding experience   | ✅ Complete |
 
 ---
 
-# **7. Impact of the Project**
+## 5. How the Project Works
 
-### 1. **Reduces annotation cost by 70–90 percent**
+### Step-by-Step Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      USER UPLOADS                           │
+│                    (Images or Videos)                       │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   SEGMENTATION AGENT                        │
+│              (SAM3 - Mask Generation)                       │
+│  • Identifies objects using text prompts                    │
+│  • Generates precise segmentation masks                     │
+│  • Extracts polygons and bounding boxes                     │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  CLASSIFICATION AGENT                       │
+│               (CLIP - Label Assignment)                     │
+│  • Computes image embeddings                                │
+│  • Matches against known class embeddings                   │
+│  • Assigns semantic labels to masks                         │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      RAG AGENT                              │
+│           (ChromaDB - Consistency Check)                    │
+│  • Retrieves similar past annotations                       │
+│  • Ensures label naming consistency                         │
+│  • Prevents semantic drift                                  │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       QA AGENT                              │
+│              (Quality Assurance)                            │
+│  • Validates mask precision                                 │
+│  • Scores confidence levels                                 │
+│  • Flags low-quality annotations                            │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    AGGREGATOR AGENT                         │
+│              (Result Combination)                           │
+│  • Combines all agent outputs                               │
+│  • Generates final COCO JSON                                │
+│  • Stores in database                                       │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     EXPORT / DISPLAY                        │
+│  • COCO format download                                     │
+│  • Frontend visualization                                   │
+│  • Analytics dashboard                                      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. Technology Stack
+
+### Backend
+
+| Technology    | Purpose                   |
+| ------------- | ------------------------- |
+| Python 3.12+  | Core language             |
+| FastAPI       | REST API framework        |
+| PyTorch 2.5+  | Deep learning framework   |
+| SAM3          | Segmentation model        |
+| CLIP          | Classification embeddings |
+| ChromaDB      | Vector database for RAG   |
+| SQLite        | Metadata storage          |
+| Google Gemini | LLM for prompts           |
+| Transformers  | Model loading             |
+
+### Frontend
+
+| Technology   | Purpose      |
+| ------------ | ------------ |
+| React 19     | UI framework |
+| TypeScript   | Type safety  |
+| Vite 7       | Build tool   |
+| Vanilla CSS  | Styling      |
+| React Router | Navigation   |
+
+---
+
+## 7. Impact of the Project
+
+### 1. Reduces annotation cost by 70–90 percent
 
 No human workforce needed for manual labeling.
 
-### 2. **Accelerates dataset creation**
+### 2. Accelerates dataset creation
 
 Millions of images can be annotated in hours instead of weeks.
 
-### 3. **Improves model performance**
+### 3. Improves model performance
 
 Consistent, high-quality masks → better training → higher accuracy.
 
-### 4. **Standardizes output formats**
+### 4. Standardizes output formats
 
 COCO-compatible dataset → works with YOLO, Detectron2, Mask R-CNN, etc.
 
-### 5. **Scales easily to enterprise level**
+### 5. Scales easily to enterprise level
 
-Plug-and-play pipeline for large dataset operations.
-
----
-
-# **8. Real-World Use Cases**
-
-### **Computer Vision Companies**
-
-Training detection and segmentation models faster.
-
-### **Autonomous Vehicles**
-
-Road scenes annotated without human effort.
-
-### **Retail / CCTV / Security**
-
-People, objects, and actions annotated in video feeds.
-
-### **Robotics**
-
-Scene understanding for manipulation tasks.
-
-### **Medical Imaging (non-diagnostic)**
-
-Segmenting organs or tools for preprocessing.
-
-### **Media & Broadcasting**
-
-Video frame annotations for studio automation.
+Modular agent architecture for easy extension.
 
 ---
 
-# **9. Why This Project Is Unique**
+## 8. Real-World Use Cases
 
-Most people only use SAM 3 to draw masks.
+| Industry                | Application                                |
+| ----------------------- | ------------------------------------------ |
+| **Computer Vision**     | Training detection and segmentation models |
+| **Autonomous Vehicles** | Road scene annotation                      |
+| **Retail/Security**     | CCTV object detection                      |
+| **Robotics**            | Scene understanding for manipulation       |
+| **Medical Imaging**     | Organ and tool segmentation                |
+| **Media/Broadcasting**  | Video frame annotation                     |
 
-You built a **full autonomous pipeline** with
-• segmentation
-• classification
-• QA
-• RAG
-• dataset formatting
-• multi-agent system
-• versioning
+---
+
+## 9. What Makes ANNOTIX Unique
+
+Most annotation tools only use SAM3 to draw masks.
+
+ANNOTIX provides a **full autonomous pipeline** with:
+
+- ✅ Multi-agent orchestration
+- ✅ Segmentation with SAM3
+- ✅ Classification with CLIP
+- ✅ Consistency with RAG
+- ✅ Quality assurance
+- ✅ Video tracking
+- ✅ Active learning
+- ✅ Object counting
+- ✅ LLM integration
+- ✅ Modern web interface
+- ✅ Standard COCO export
+
+---
+
+## 10. Future Roadmap
+
+- [ ] Multi-user collaboration with roles
+- [ ] Cloud deployment (AWS/GCP)
+- [ ] Model fine-tuning interface
+- [ ] Real-time collaboration
+- [ ] Mobile app
+- [ ] Plugin ecosystem
+
+---
+
+**Author**: Dilip Reddy  
+**Repository**: https://github.com/DilipReddy57/Annotix  
+**Last Updated**: December 2024

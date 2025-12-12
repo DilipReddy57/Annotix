@@ -44,35 +44,49 @@ SAM3 introduces **open-vocabulary text prompts** - you can segment ANY concept u
 | Feature               | Description                                        |
 | --------------------- | -------------------------------------------------- |
 | **SAM3 Segmentation** | Open-vocabulary detection with 270K+ concepts      |
-| **Video Tracking**    | Temporal propagation with object ID persistence    |
+| **Video Tracking**    | Temporal propagation with SAM3 memory bank         |
 | **Multi-Modal RAG**   | Visual + text embeddings for intelligent retrieval |
-| **LLM Integration**   | Auto-prompt generation using Gemini/GPT            |
+| **LLM Integration**   | Auto-prompt generation using Google Gemini         |
 | **Active Learning**   | Smart sample selection for efficient annotation    |
 
-### 🔬 Advanced Features
+### 🔬 Advanced AI Agents
 
-- **Auto-Prompt Generation**: LLM analyzes images and generates optimal SAM3 prompts
-- **Label Consistency**: RAG-powered knowledge base prevents labeling inconsistencies
-- **Embedding Visualization**: UMAP/t-SNE clustering for annotation analysis
-- **Quality Assurance**: Multi-metric confidence fusion and validation
-- **Scene Graphs**: Spatial relationship detection between objects
-- **COCO Export**: Standard format export for ML pipelines
-- **Dataset Import**: Import datasets directly from Kaggle, HuggingFace, or GitHub
+| Agent                     | Description                                              |
+| ------------------------- | -------------------------------------------------------- |
+| **Segmentation Agent**    | SAM3-powered mask generation with text/point/box prompts |
+| **Classification Agent**  | CLIP-based semantic labeling                             |
+| **RAG Agent**             | ChromaDB vector search for label consistency             |
+| **Multi-Modal RAG**       | Combined image + text embeddings                         |
+| **QA Agent**              | Confidence scoring and validation                        |
+| **Active Learning Agent** | Uncertainty-based sample selection                       |
+| **Context Learner**       | Domain adaptation and context understanding              |
+| **Instance Learner**      | Few-shot learning for custom objects                     |
+| **Counting Agent**        | Object counting with density estimation                  |
+| **Tracking Agent**        | Video object tracking with ID persistence                |
+| **Scene Graph Engine**    | Spatial relationship detection                           |
+| **Embedding Visualizer**  | UMAP/t-SNE clustering visualization                      |
+| **LLM Agent**             | Gemini-powered auto-prompt generation                    |
+| **Live Stream Agent**     | Real-time video annotation                               |
 
 ### 🎨 Modern UI/UX
 
-- **Artistic Design**: Handcrafted "Emerald Tech" theme with premium aesthetics
-- **SVG Logo**: Custom bounding-box + crosshair logo representing annotation
+- **Pastel Theme**: Soft, modern color palette with glassmorphism effects
+- **Smart Intro Animation**: Personalized onboarding experience
 - **Bento Grid Dashboard**: Asymmetric layout for visual hierarchy
-- **Smooth Animations**: GPU-accelerated CSS animations
-- **Matrix Rain Effect**: Stylized annotation rain background
+- **Dark Mode**: Full dark theme with emerald accents
+- **Smooth Animations**: GPU-accelerated CSS transitions
+- **Responsive Design**: Works on desktop and tablet
 
 ### 📊 Enterprise Features
 
-- **Scalable Architecture**: Celery task queues, Redis caching
-- **Production Monitoring**: Prometheus metrics, structured logging
-- **REST API**: Full FastAPI backend with authentication
-- **Real-time Dashboard**: React 19 frontend with analytics
+| Feature                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| **Dataset Import**      | Import from Kaggle, HuggingFace, GitHub, or URLs |
+| **COCO Export**         | Standard format export for ML pipelines          |
+| **Real-time Dashboard** | Project stats, activity feed, system status      |
+| **User Authentication** | JWT-based auth with role management              |
+| **Feedback System**     | User feedback collection for improvement         |
+| **Settings Panel**      | Comprehensive configuration options              |
 
 ---
 
@@ -122,8 +136,9 @@ npm run dev
 
 ```bash
 # From project root
-python -m backend.main
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 # API available at http://localhost:8000
+# API docs at http://localhost:8000/docs
 ```
 
 ### 2. Start the Frontend
@@ -134,7 +149,15 @@ npm run dev
 # UI available at http://localhost:5173
 ```
 
-### 3. Python API Usage
+### 3. Using the Web Interface
+
+1. **Login**: Use default credentials or register a new account
+2. **Create Project**: Click "New Project" on the dashboard
+3. **Upload Images**: Drag & drop images or import from Kaggle/URL
+4. **Annotate**: Use text prompts for automatic annotation
+5. **Export**: Download annotations in COCO format
+
+### 4. Python API Usage
 
 ```python
 from backend.pipeline.orchestrator import AnnotationPipeline
@@ -142,17 +165,10 @@ from backend.pipeline.orchestrator import AnnotationPipeline
 # Initialize pipeline
 pipeline = AnnotationPipeline()
 
-# Basic annotation
+# Basic annotation with text prompt
 result = pipeline.process_image(
     "image.jpg",
     prompt="cars and pedestrians"
-)
-
-# Smart processing with LLM-powered auto-prompts
-result = pipeline.smart_process_image(
-    "image.jpg",
-    use_auto_prompts=True,
-    context="autonomous driving"
 )
 
 # Video tracking
@@ -161,24 +177,8 @@ result = pipeline.process_video(
     prompt="person"
 )
 
-# Get next best images to annotate (Active Learning)
-next_batch = pipeline.get_next_annotation_batch(
-    candidate_images=["img1.jpg", "img2.jpg", ...],
-    batch_size=10
-)
-```
-
-### 4. CLI Usage
-
-```bash
-# Process single image
-python -m backend.cli process image.jpg --prompt "cars"
-
-# Process directory
-python -m backend.cli process ./images --prompt "people"
-
-# View analytics
-python -m backend.cli analytics
+# Export to COCO format
+pipeline.export_coco("output_annotations.json")
 ```
 
 ---
@@ -191,16 +191,21 @@ python -m backend.cli analytics
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
 │  │   Frontend  │  │   FastAPI   │  │    CLI      │   Interfaces │
-│  │   (React)   │  │   Backend   │  │   Client    │              │
+│  │ (React 19)  │  │   Backend   │  │   Client    │              │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
 │         │                │                │                     │
 │  ───────┴────────────────┴────────────────┴───────────────────  │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    API ROUTES                             │   │
+│  │  /projects  /auth  /export  /counting  /live  /qa  /rag  │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
 │  │                 ANNOTATION PIPELINE                       │   │
 │  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │   │
 │  │  │  SAM3   │→ │   RAG   │→ │   QA    │→ │ Export  │      │   │
-│  │  │ Agent   │  │  Agent  │  │  Agent  │  │ Agent   │      │   │
+│  │  │ Agent   │  │  Agent  │  │  Agent  │  │         │      │   │
 │  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
@@ -209,6 +214,10 @@ python -m backend.cli analytics
 │  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │   │
 │  │  │ Active  │  │ Context │  │Instance │  │ Scene   │      │   │
 │  │  │Learning │  │ Learner │  │Learner  │  │ Graph   │      │   │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │   │
+│  │  │Counting │  │Tracking │  │  LLM    │  │  Live   │      │   │
+│  │  │ Agent   │  │  Agent  │  │  Agent  │  │ Stream  │      │   │
 │  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
@@ -227,30 +236,76 @@ python -m backend.cli analytics
 ## 📁 Project Structure
 
 ```
-annotix/
+Annotix/
 ├── backend/
-│   ├── agents/           # AI agents (SAM3, RAG, QA, etc.)
-│   │   ├── segmentation.py    # SAM3 agent
-│   │   ├── rag.py             # RAG agent with ChromaDB
-│   │   ├── qa.py              # Quality assurance
-│   │   ├── active_learning.py # Sample selection
-│   │   └── ...
-│   ├── api/              # FastAPI routes
+│   ├── agents/                 # AI agents
+│   │   ├── segmentation.py     # SAM3 segmentation agent
+│   │   ├── rag.py              # RAG agent with ChromaDB
+│   │   ├── multimodal_rag.py   # Multi-modal RAG
+│   │   ├── qa.py               # Quality assurance
+│   │   ├── active_learning.py  # Sample selection
+│   │   ├── context_learner.py  # Domain adaptation
+│   │   ├── instance_learner.py # Few-shot learning
+│   │   ├── counting_agent.py   # Object counting
+│   │   ├── tracking_agent.py   # Video tracking
+│   │   ├── live_stream.py      # Real-time processing
+│   │   ├── llm_agent.py        # Gemini integration
+│   │   ├── graph_engine.py     # Scene graphs
+│   │   ├── embedding_visualizer.py  # UMAP/t-SNE
+│   │   └── aggregator.py       # Result aggregation
+│   ├── api/
 │   │   └── routes/
-│   ├── core/             # Config, models, database
-│   ├── pipeline/         # Orchestrator
-│   └── main.py           # Entry point
+│   │       ├── projects.py     # Project management
+│   │       ├── auth.py         # Authentication
+│   │       ├── export.py       # COCO export
+│   │       ├── counting.py     # Counting endpoints
+│   │       ├── live.py         # Live stream endpoints
+│   │       ├── qa.py           # QA endpoints
+│   │       ├── rag.py          # RAG endpoints
+│   │       ├── feedback.py     # User feedback
+│   │       ├── tasks.py        # Background tasks
+│   │       └── system.py       # System status
+│   ├── core/
+│   │   ├── config.py           # Configuration
+│   │   ├── database.py         # SQLite setup
+│   │   ├── models.py           # SQLAlchemy models
+│   │   └── security.py         # Auth utilities
+│   ├── pipeline/
+│   │   └── orchestrator.py     # Main pipeline
+│   ├── sam3/                   # SAM3 model (submodule)
+│   ├── utils/                  # Utilities
+│   ├── cli.py                  # CLI interface
+│   └── main.py                 # FastAPI entry point
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # React components
-│   │   │   ├── ui/       # UI primitives (annotix-logo, etc.)
-│   │   │   ├── dashboard/# Dashboard components
-│   │   │   └── ...
-│   │   ├── index.css     # Emerald theme
-│   │   └── App.tsx       # Main app
+│   │   ├── components/
+│   │   │   ├── Home.tsx        # Home page
+│   │   │   ├── Layout.tsx      # App layout
+│   │   │   ├── Gallery.tsx     # Image gallery
+│   │   │   ├── Analytics.tsx   # Analytics dashboard
+│   │   │   ├── Settings.tsx    # Settings panel
+│   │   │   ├── IntroScreen.tsx # Animated intro
+│   │   │   ├── KnowledgeBase.tsx # RAG knowledge base
+│   │   │   ├── UploadZone.tsx  # File upload
+│   │   │   ├── dashboard/      # Dashboard components
+│   │   │   ├── ui/             # UI primitives
+│   │   │   ├── Editor/         # Annotation editor
+│   │   │   ├── Project/        # Project views
+│   │   │   └── Video/          # Video annotation
+│   │   ├── api/                # API client
+│   │   ├── context/            # React context
+│   │   ├── index.css           # Pastel theme styles
+│   │   ├── App.tsx             # Main app
+│   │   └── main.tsx            # Entry point
 │   └── package.json
-├── data/                 # Uploads and exports
-├── requirements.txt
+├── docs/                       # Documentation
+├── storage/                    # User uploads (gitignored)
+├── requirements.txt            # Python dependencies
+├── Dockerfile                  # Docker configuration
+├── fly.toml                    # Fly.io deployment
+├── railway.toml                # Railway deployment
+├── render.yaml                 # Render deployment
+├── vercel.json                 # Vercel deployment
 └── README.md
 ```
 
@@ -264,10 +319,12 @@ annotix/
 | ------ | ---------------------------------- | ---------------------- |
 | POST   | `/api/projects/`                   | Create new project     |
 | GET    | `/api/projects/`                   | List all projects      |
+| GET    | `/api/projects/{id}`               | Get project details    |
 | GET    | `/api/projects/stats`              | Dashboard statistics   |
 | POST   | `/api/projects/import-dataset`     | Import from Kaggle/URL |
 | POST   | `/api/projects/{id}/upload`        | Upload images          |
 | POST   | `/api/projects/{id}/videos/upload` | Upload videos          |
+| GET    | `/api/projects/{id}/images`        | List project images    |
 
 ### Annotation
 
@@ -283,21 +340,51 @@ annotix/
 | ------ | ------------------------------- | ---------------- |
 | GET    | `/api/export/{project_id}/coco` | Export COCO JSON |
 
+### Counting
+
+| Method | Endpoint                          | Description            |
+| ------ | --------------------------------- | ---------------------- |
+| POST   | `/api/counting/count`             | Count objects in image |
+| GET    | `/api/counting/supported-classes` | Get supported classes  |
+
+### Live Stream
+
+| Method | Endpoint           | Description           |
+| ------ | ------------------ | --------------------- |
+| POST   | `/api/live/start`  | Start live processing |
+| POST   | `/api/live/stop`   | Stop live processing  |
+| GET    | `/api/live/status` | Get stream status     |
+
+### RAG & Knowledge Base
+
+| Method | Endpoint         | Description           |
+| ------ | ---------------- | --------------------- |
+| POST   | `/api/rag/query` | Query knowledge base  |
+| POST   | `/api/rag/add`   | Add to knowledge base |
+
+### System
+
+| Method | Endpoint             | Description          |
+| ------ | -------------------- | -------------------- |
+| GET    | `/api/system/status` | System health status |
+
 ---
 
 ## 🎨 UI Theme
 
-ANNOTIX uses the **Emerald Tech** theme:
+ANNOTIX uses a **Pastel** theme with emerald accents:
 
-| Element    | Color    | Hex       |
-| ---------- | -------- | --------- |
-| Primary    | Emerald  | `#10b981` |
-| Accent     | Teal     | `#14b8a6` |
-| Background | Carbon   | `#09090b` |
-| Card       | Charcoal | `#0f0f12` |
-| Success    | Green    | `#22c55e` |
-| Warning    | Amber    | `#f59e0b` |
-| Error      | Red      | `#ef4444` |
+| Element     | Color       | Hex       |
+| ----------- | ----------- | --------- |
+| Primary     | Emerald     | `#10b981` |
+| Background  | Dark Carbon | `#09090b` |
+| Card        | Charcoal    | `#0f0f12` |
+| Success     | Green       | `#22c55e` |
+| Warning     | Amber       | `#f59e0b` |
+| Error       | Red         | `#ef4444` |
+| Pastel Rose | Soft Pink   | `#fecdd3` |
+| Pastel Blue | Soft Blue   | `#bfdbfe` |
+| Pastel Mint | Soft Green  | `#bbf7d0` |
 
 ### Typography
 
@@ -315,8 +402,8 @@ ANNOTIX uses the **Emerald Tech** theme:
 # Backend tests
 pytest tests/
 
-# E2E test
-python test_e2e.py
+# Frontend tests
+cd frontend && npm test
 ```
 
 ### Build for Production
@@ -328,6 +415,13 @@ npm run build
 
 # The dist/ folder can be served statically
 ```
+
+### Deployment Options
+
+- **Fly.io**: `fly deploy`
+- **Railway**: Push to connected repo
+- **Render**: Push to connected repo
+- **Vercel**: Push to connected repo (frontend only)
 
 ---
 
@@ -351,5 +445,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Built with ❤️ by [Dilip Reddy](https://github.com/DilipReddy57)**
 
 [![GitHub](https://img.shields.io/badge/GitHub-DilipReddy57-10b981?style=flat-square&logo=github)](https://github.com/DilipReddy57)
+
+**Last Updated**: December 2024
 
 </div>
