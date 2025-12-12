@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body, Depends
-from typing import List, Dict, Any
 from sqlmodel import Session, select
-from backend.core.models import Project, Image, Annotation
+from backend.core.models import Project, Image
 from backend.core.database import get_session
 from backend.core.logger import get_logger
 

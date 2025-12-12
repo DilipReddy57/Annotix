@@ -12,7 +12,7 @@ import os
 import json
 import uuid
 import numpy as np
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from collections import Counter
 
 from backend.core.logger import get_logger

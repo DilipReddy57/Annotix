@@ -1,4 +1,3 @@
-import numpy as np
 from typing import Any, List
 from backend.core.logger import get_logger
 

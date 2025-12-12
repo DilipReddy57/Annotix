@@ -9,7 +9,7 @@ Provides endpoints for:
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Tuple
 
 from backend.core.logger import get_logger
 from backend.agents.counting_agent import CountingAgent
