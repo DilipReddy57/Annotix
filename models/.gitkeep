@@ -1,5 +1,0 @@
-# Placeholder to ensure models directory is tracked
-# Model files (.pth, .bin, .pt) are gitignored
-# Download models using:
-#   huggingface-cli login
-#   python -c "from backend.agents.segmentation import SAM3Agent; SAM3Agent()"

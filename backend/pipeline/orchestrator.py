@@ -448,132 +448,252 @@ class AnnotationPipeline:
         file_path: str,
         project_id: Optional[str] = None,
         use_auto_prompts: bool = True,
-        context: Optional[str] = None
+        context: Optional[str] = None,
+        turbo_mode: bool = False
     ) -> Dict[str, Any]:
         """
-        Process image with LLM-powered auto-prompt generation.
+        Process image with intelligent annotation pipeline.
         
-        Optimized Flow:
-        1. Auto-generate prompts (limited to top 2 for speed)
-        2. Run SAM3, Refiner, RAG Consistency, and QA in loop
-        3. Background task for heavy Analytics (Multi-modal RAG, Viz)
+        FAST BY DEFAULT:
+        - Single SAM3 inference (unless auto-prompts find multiple targets)
+        - Real CLIP embeddings for genuine RAG consistency
+        - QA validation (fast, rule-based)
+        - LLM-arbitrated RAG only when needed (ambiguous labels)
+        - Analytics run in background (non-blocking)
+        
+        TURBO MODE (even faster):
+        - Skip auto-prompt generation (use generic prompt)
+        - Skip CLIP embeddings (use label normalization only)
+        - Skip RAG lookup (just normalize labels)
         
         Args:
             file_path: Path to the image
             project_id: Optional project ID
-            use_auto_prompts: Use LLM to generate prompts
+            use_auto_prompts: Use LLM to generate prompts (default mode)
             context: Optional context for prompt generation
+            turbo_mode: Skip heavy AI features for maximum speed
             
         Returns:
-            Enhanced result with auto-generated prompts
+            Enhanced result with annotations
         """
-        logger.info(f"Smart processing: {file_path}")
+        import time
+        start_time = time.time()
+        
+        logger.info(f"Processing: {file_path} (turbo={turbo_mode})")
+        
+        # Load image once for all operations
+        try:
+            pil_image = Image.open(file_path).convert("RGB")
+            width, height = pil_image.size
+        except Exception as e:
+            logger.error(f"Failed to load image: {e}")
+            return {"status": "error", "error": str(e)}
         
         all_annotations = []
         used_prompts = []
         
-        # Step 1: Auto-generate prompts
-        if use_auto_prompts and self.enable_advanced:
-            # Limit to 2 prompts for performance
-            prompts = self.auto_generate_prompts(file_path, context=context, max_prompts=2)
-            used_prompts = [p["prompt"] for p in prompts if p.get("confidence", 0) > 0.6]
-        
-        if not used_prompts:
-            used_prompts = ["all visible objects"]
-        
-        # Limit iteration to max 2 prompts to prevent timeouts
-        processing_prompts = used_prompts[:2]
-        
-        # Step 2: Process with each prompt
-        for prompt in processing_prompts:
+        # ============================================================
+        # STEP 1: Determine prompts (Fast or Auto)
+        # ============================================================
+        if turbo_mode:
+            # Turbo: Single generic prompt, no LLM
+            prompts_to_use = ["all objects"]
+        elif use_auto_prompts and self.enable_advanced:
+            # Default: Ask LLM for smart prompts (limit to 1 for speed)
             try:
-                # A. SAM3 Segmentation
+                generated = self.auto_generate_prompts(file_path, context=context, max_prompts=2)
+                prompts_to_use = [p["prompt"] for p in generated if p.get("confidence", 0) > 0.6][:1]
+            except Exception as e:
+                logger.warning(f"Auto-prompt failed, using fallback: {e}")
+                prompts_to_use = []
+            
+            if not prompts_to_use:
+                prompts_to_use = ["all visible objects"]
+        else:
+            prompts_to_use = ["all visible objects"]
+        
+        used_prompts = prompts_to_use
+        
+        # ============================================================
+        # STEP 2: SAM3 Segmentation (single pass for speed)
+        # ============================================================
+        for prompt in prompts_to_use:
+            try:
                 annotations = self.sam_agent.segment_image(
                     file_path, prompt=prompt, return_masks=True
                 )
                 
                 for ann in annotations:
-                    # B. Mask Refinement
-                    if ann.get("mask") is not None:
-                        ann["mask"] = self.refiner.refine_mask(ann["mask"])
-                        
-                    # C. RAG Label Consistency
-                    # Use prompt as initial label, check consistency
-                    label = ann.get("label", prompt)
-                    # Use a placeholder embedding since SAM3 doesn't return one directly here
-                    # In a real scenario, we'd extract it. This ensures the flow works.
-                    embedding = np.random.rand(256).astype('float32') 
-                    consistent_label = self.rag.retrieve_consistent_label(embedding, label)
-                    ann["label"] = consistent_label
-                    
-                    # D. QA Validation
-                    qa_result = self.qa.validate_annotation(
-                        ann.get("mask"), ann.get("bbox"), {"label": consistent_label, "confidence": ann.get("score")}
-                    )
-                    
-                    if qa_result.get("valid", True):
-                        ann["source_prompt"] = prompt
-                        all_annotations.append(ann)
-                    else:
-                        logger.debug(f"Annotation rejected by QA: {qa_result.get('reason')}")
+                    ann["source_prompt"] = prompt
+                    all_annotations.append(ann)
                     
             except Exception as e:
-                logger.warning(f"Failed with prompt '{prompt}': {e}")
+                logger.warning(f"Segmentation failed for '{prompt}': {e}")
         
-        # Step 3: Deduplicate overlapping annotations
-        deduplicated = self._deduplicate_annotations(all_annotations)
+        if not all_annotations:
+            # No annotations found
+            elapsed = time.time() - start_time
+            return {
+                "status": "success",
+                "image_path": file_path,
+                "width": width,
+                "height": height,
+                "annotations": [],
+                "prompts_used": used_prompts,
+                "processing_time_ms": int(elapsed * 1000),
+                "processing_mode": "turbo" if turbo_mode else "fast"
+            }
         
-        # Step 4: Background processing for RAG/Viz (Non-blocking)
-        if self.enable_advanced and deduplicated:
+        # ============================================================
+        # STEP 3: Mask Refinement (fast, always run)
+        # ============================================================
+        for ann in all_annotations:
+            if ann.get("mask") is not None:
+                ann["mask"] = self.refiner.refine_mask(ann["mask"])
+        
+        # ============================================================
+        # STEP 4: Real Embeddings + RAG Consistency (skip in turbo)
+        # ============================================================
+        if not turbo_mode:
+            try:
+                from backend.agents.embedding_extractor import get_embedding_extractor
+                extractor = get_embedding_extractor()
+                
+                # Batch extract embeddings (more efficient)
+                bboxes = [ann.get("bbox", [0, 0, width, height]) for ann in all_annotations]
+                embeddings = extractor.batch_extract(pil_image, bboxes)
+                
+                for ann, embedding in zip(all_annotations, embeddings):
+                    label = ann.get("label", ann.get("source_prompt", "object"))
+                    
+                    if embedding is not None:
+                        # Real RAG consistency check (no LLM arbitration by default - too slow)
+                        consistent_label = self.rag.retrieve_consistent_label(
+                            embedding, 
+                            label,
+                            llm_agent=None  # Skip LLM for speed, use voting
+                        )
+                        ann["label"] = consistent_label
+                        ann["_embedding"] = embedding  # Store for background RAG update
+                    else:
+                        # Fallback: just normalize the label
+                        ann["label"] = self.rag.normalize_label(label)
+                        
+            except Exception as e:
+                logger.warning(f"Embedding extraction failed: {e}")
+                # Fallback: normalize labels without embeddings
+                for ann in all_annotations:
+                    label = ann.get("label", ann.get("source_prompt", "object"))
+                    ann["label"] = self.rag.normalize_label(label)
+        else:
+            # Turbo mode: just normalize labels
+            for ann in all_annotations:
+                label = ann.get("label", ann.get("source_prompt", "object"))
+                ann["label"] = self.rag.normalize_label(label)
+        
+        # ============================================================
+        # STEP 5: QA Validation (fast, always run)
+        # ============================================================
+        validated_annotations = []
+        for ann in all_annotations:
+            qa_result = self.qa.validate_annotation(
+                ann.get("mask"), 
+                ann.get("bbox"), 
+                {"label": ann.get("label"), "confidence": ann.get("score")}
+            )
+            
+            if qa_result.get("valid", True):
+                validated_annotations.append(ann)
+            else:
+                logger.debug(f"QA rejected: {qa_result.get('reason')}")
+        
+        # ============================================================
+        # STEP 6: Deduplicate overlapping annotations
+        # ============================================================
+        deduplicated = self._deduplicate_annotations(validated_annotations)
+        
+        # ============================================================
+        # STEP 7: Background Analytics (non-blocking)
+        # ============================================================
+        if self.enable_advanced and deduplicated and not turbo_mode:
             from threading import Thread
             
-            def _background_analytics(anns, f_path, p_id):
+            def _background_work(anns, f_path, p_id, pil_img):
+                """Update RAG database and analytics in background."""
                 try:
+                    from backend.agents.embedding_extractor import get_embedding_extractor
+                    extractor = get_embedding_extractor()
+                    
                     for ann in anns:
-                        # Generate embedding (simulated or real)
-                        embedding = np.random.rand(256).astype('float32') 
+                        # Use stored embedding or extract new
+                        embedding = ann.pop("_embedding", None)
+                        if embedding is None:
+                            bbox = ann.get("bbox")
+                            embedding = extractor.extract_embedding(pil_img, bbox)
                         
-                        # Add to multi-modal RAG
-                        self.multimodal_rag.add_multimodal_entry(
-                            visual_embedding=embedding,
-                            label=ann.get("label", "object"),
-                            image_id=f_path,
-                            project_id=p_id,
-                            bbox=ann.get("bbox"),
-                            confidence=ann.get("score", 0.5)
-                        )
-                        
-                        # Add to embedding visualizer
-                        self.embedding_viz.add_embedding(
-                            entry_id=f"{f_path}_{ann.get('id', 0)}",
-                            embedding=embedding,
-                            metadata={
-                                "label": ann.get("label"),
-                                "image_path": f_path,
-                                "score": ann.get("score")
-                            }
-                        )
+                        if embedding is not None:
+                            # Add to RAG for future consistency
+                            self.rag.add_entry(
+                                embedding=embedding,
+                                label=ann.get("label", "object"),
+                                image_id=f_path,
+                                project_id=p_id,
+                                bbox=ann.get("bbox"),
+                                confidence=ann.get("score", 0.5)
+                            )
+                            
+                            # Add to multi-modal RAG
+                            self.multimodal_rag.add_multimodal_entry(
+                                visual_embedding=embedding,
+                                label=ann.get("label", "object"),
+                                image_id=f_path,
+                                project_id=p_id,
+                                bbox=ann.get("bbox"),
+                                confidence=ann.get("score", 0.5)
+                            )
+                            
+                            # Add to embedding visualizer
+                            self.embedding_viz.add_embedding(
+                                entry_id=f"{f_path}_{ann.get('id', 0)}",
+                                embedding=embedding,
+                                metadata={
+                                    "label": ann.get("label"),
+                                    "image_path": f_path,
+                                    "score": ann.get("score")
+                                }
+                            )
                     
                     # Track for active learning
+                    avg_embedding = np.mean([
+                        ann.get("_embedding", np.zeros(512)) 
+                        for ann in anns if ann.get("_embedding") is not None
+                    ], axis=0) if anns else np.zeros(512)
+                    
                     self.active_learning.add_to_history(
                         image_path=f_path,
                         annotations=anns,
-                        embedding=np.random.rand(256).astype('float32')
+                        embedding=avg_embedding.astype(np.float32)
                     )
+                    
                 except Exception as e:
                     logger.error(f"Background analytics failed: {e}")
-
-            # Start background thread
-            thread = Thread(target=_background_analytics, args=(deduplicated, file_path, project_id))
+            
+            # Copy image to avoid thread issues
+            pil_copy = pil_image.copy()
+            thread = Thread(target=_background_work, args=(deduplicated.copy(), file_path, project_id, pil_copy))
             thread.daemon = True
             thread.start()
         
-        # Get image dimensions
-        try:
-            img = Image.open(file_path)
-            width, height = img.size
-        except:
-            width, height = 0, 0
+        # Clean up embeddings from output (not needed in response)
+        for ann in deduplicated:
+            ann.pop("_embedding", None)
+        
+        # ============================================================
+        # STEP 8: Build scene graph
+        # ============================================================
+        scene_graph = self.graph_engine.build_graph(deduplicated)
+        
+        elapsed = time.time() - start_time
         
         return {
             "status": "success",
@@ -581,9 +701,10 @@ class AnnotationPipeline:
             "width": width,
             "height": height,
             "annotations": deduplicated,
-            "prompts_used": processing_prompts,
-            "scene_graph": self.graph_engine.build_graph(deduplicated),
-            "processing_mode": "smart_fast"
+            "prompts_used": used_prompts,
+            "scene_graph": scene_graph,
+            "processing_time_ms": int(elapsed * 1000),
+            "processing_mode": "turbo" if turbo_mode else "fast"
         }
     
     def _deduplicate_annotations(

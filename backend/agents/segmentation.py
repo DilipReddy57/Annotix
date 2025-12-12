@@ -211,8 +211,13 @@ class SAM3Agent:
             - label: str
             - mask: np.ndarray (only if return_masks=True)
         """
+
         logger.info(f"Segmenting {image_path} with prompt: '{prompt}'")
         
+        # Performance: Clear VRAM before heavy segmentation
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            
         if self.processor is None:
             logger.warning("SAM 3 not loaded, returning mock results")
             return self._mock_segmentation(image_path, prompt)

@@ -224,19 +224,17 @@ class RAGAgent:
         embedding: Optional[np.ndarray],
         proposed_label: str,
         n_results: int = 5,
-        similarity_threshold: float = 0.85
+        similarity_threshold: float = 0.85,
+        llm_agent: Any = None
     ) -> str:
         """
         Retrieve the most consistent label based on visual similarity.
         
-        Args:
-            embedding: Visual embedding of the current annotation
-            proposed_label: Label proposed by the detector
-            n_results: Number of similar entries to consider
-            similarity_threshold: Minimum similarity to consider a match
-            
-        Returns:
-            Consistent label (may be same as proposed or corrected)
+        Novel Approach:
+        If 'llm_agent' is provided, we use "LLM Arbitration":
+        1. Retrieve similar past annotations.
+        2. Ask LLM: "Given these past examples, what is the consistent label for a new object called '{proposed_label}'?"
+        This handles complex taxonomy better than simple voting.
         """
         # First, normalize the proposed label
         canonical_proposed = self.normalize_label(proposed_label)
@@ -257,10 +255,52 @@ class RAGAgent:
             if not results["metadatas"] or not results["metadatas"][0]:
                 return canonical_proposed
             
+            metadatas = results["metadatas"][0]
+            distances = results.get("distances", [[]])[0]
+            
+            # --- Novel Approach: LLM Arbitration ---
+            if llm_agent:
+                try:
+                    # Filter relevant examples
+                    context_examples = []
+                    for i, meta in enumerate(metadatas):
+                        dist = distances[i] if i < len(distances) else 1.0
+                        sim = 1 - dist
+                        if sim >= similarity_threshold:
+                            context_examples.append(f"- Label: '{meta.get('label')}' (Confidence: {meta.get('confidence', 0):.2f})")
+                    
+                    if context_examples:
+                        # Ask LLM to arbitrate
+                        prompt = f"""We are enforcing label consistency for an annotation project.
+Current Detection: "{proposed_label}"
+Similar Past Objects have been labeled as:
+{chr(10).join(context_examples)}
+
+Task: strict_consistency
+Rule: If the specific term appears in history (e.g., 'cracked_screen' vs 'screen'), prefer the specific one.
+Return ONLY the best label string. Nothing else."""
+                        
+                        # Use a lightweight generation (we assume llm_agent has a 'generate_text' or similar, 
+                        # but we'll use the 'refine_prompt' structure or direct call if available.
+                        # Since LLMAgent usage varies, we'll try to map it or skip if method missing.
+                        if hasattr(llm_agent, "model") and llm_agent.model:
+                            # Implement Gemini call for arbitration
+                            response = llm_agent.model.generate_content(prompt)
+                            refined_label = response.text.strip()
+                            
+                            # Sanity check: ensure it's not a sentence
+                            if len(refined_label.split()) < 5:
+                                logger.info(f"LLM Arbitration: '{proposed_label}' -> '{refined_label}'")
+                                return refined_label
+                            else:
+                                logger.warning(f"LLM returned verbose label: {refined_label}. Falling back to voting.") 
+                except Exception as e:
+                    logger.warning(f"LLM Arbitration failed: {e}")
+            
+            # --- Standard Approach: Weighted Voting ---
+            
             # Count labels from similar annotations
             label_votes: Counter = Counter()
-            distances = results.get("distances", [[]])[0]
-            metadatas = results["metadatas"][0]
             
             for i, meta in enumerate(metadatas):
                 distance = distances[i] if i < len(distances) else 1.0
