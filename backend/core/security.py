@@ -2,13 +2,15 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import jwt
 from passlib.context import CryptContext
+from backend.core.config import settings
 
-# TODO: Move these to environment variables for production
-SECRET_KEY = "super-secret-key-change-this-in-production"
+# Use config settings
+SECRET_KEY = settings.SECRET_KEY if hasattr(settings, "SECRET_KEY") else "super-secret-key-change-this-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Switched to argon2 because bcrypt/passlib has compatibility issues with newer versions
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

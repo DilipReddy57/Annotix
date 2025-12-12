@@ -10,7 +10,7 @@ torchaudio>=2.0.0
 
 # ============ SAM3 Dependencies ============
 timm>=1.0.17
-numpy>=1.26.0,<2.0.0
+numpy>=1.26.0,<3.0.0
 tqdm
 ftfy>=6.1.1
 regex
@@ -51,6 +51,7 @@ python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
+argon2-cffi>=21.0.0
 
 # ============ Scientific Computing ============
 scipy>=1.11.0
@@ -99,4 +100,3 @@ plotly>=5.18.0    # For interactive visualization
 
 # ============ SAM Original (if needed) ============
 # git+https://github.com/facebookresearch/segment-anything.git
-

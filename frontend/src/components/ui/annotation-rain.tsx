@@ -51,8 +51,6 @@ interface Drop {
 }
 
 const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
-  // Use state to hold the drops. This ensures we only generate them once on mount,
-  // avoiding hydration mismatch issues and impure render calls.
   const [drops, setDrops] = useState<Drop[]>([]);
 
   // Color palette - rich, artistic colors
@@ -88,12 +86,10 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
       });
     }
     setDrops(dropList);
-    // Empty dependency array ensures this runs only once on client mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (drops.length === 0) {
-    return null; // Don't render anything on server/initial render to avoid hydration mismatch
+    return null;
   }
 
   return (
@@ -101,7 +97,6 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
       className={`fixed inset-0 overflow-hidden pointer-events-none ${className}`}
       style={{ zIndex: 0 }}
     >
-      {/* Animated gradient background */}
       <div
         className="absolute inset-0 opacity-30"
         style={{
@@ -112,8 +107,6 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
           `,
         }}
       />
-
-      {/* Rain drops - CSS animation only */}
       {drops.map((drop) => (
         <div
           key={drop.id}
@@ -148,40 +141,6 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
           })}
         </div>
       ))}
-
-      {/* Floating orbs - subtle ambient glow */}
-      <div
-        className="absolute w-96 h-96 rounded-full blur-3xl"
-        style={{
-          top: "15%",
-          left: "10%",
-          background:
-            "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%)",
-          animation: "orbFloat 20s ease-in-out infinite",
-        }}
-      />
-      <div
-        className="absolute w-72 h-72 rounded-full blur-3xl"
-        style={{
-          bottom: "20%",
-          right: "15%",
-          background:
-            "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)",
-          animation: "orbFloat 25s ease-in-out infinite reverse",
-        }}
-      />
-      <div
-        className="absolute w-48 h-48 rounded-full blur-3xl"
-        style={{
-          top: "50%",
-          right: "30%",
-          background:
-            "radial-gradient(circle, rgba(236, 72, 153, 0.05) 0%, transparent 70%)",
-          animation: "orbFloat 18s ease-in-out 3s infinite",
-        }}
-      />
-
-      {/* Gradient fade at bottom for content readability */}
       <div
         className="absolute bottom-0 left-0 right-0 h-64 pointer-events-none"
         style={{
