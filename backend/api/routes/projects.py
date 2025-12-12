@@ -513,8 +513,13 @@ def run_annotation_task(project_id: str, image_id: str):
         try:
             file_path = os.path.join(settings.UPLOAD_DIR, project_id, image.filename)
             
-            # Call the orchestrator
-            result = pipeline.process_image(file_path)
+            # Call the smart orchestrator
+            # This enables Auto-Prompt generation and background analytics
+            result = pipeline.smart_process_image(
+                file_path=file_path,
+                project_id=project_id,
+                use_auto_prompts=True
+            )
             
             # Convert result annotations to our model
             for ann_data in result["annotations"]:

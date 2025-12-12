@@ -113,28 +113,11 @@ class LLMAgent:
         if self.model is None:
             return self._mock_prompts(image_path)
         
-        prompt = f"""Analyze this image and generate {max_prompts} optimal text prompts for SAM 3 
-(Segment Anything Model 3) to detect and segment objects.
-
-{f'Context: {context}' if context else ''}
-
-For each detected object or concept, provide:
-1. The exact prompt text (be specific, e.g., "red car on the left" not just "car")
-2. Confidence score (0-1) that this object exists in the image
-3. Brief reasoning
-
-Return as JSON array:
-[
-  {{"prompt": "specific object description", "confidence": 0.95, "reason": "clearly visible in center"}},
-  ...
-]
-
-Focus on:
-- Specific attributes (colors, positions, sizes)
-- Distinguishing features ("person wearing blue jacket")
-- Spatial relationships ("laptop on wooden desk")
-- All visible objects, foreground and background
-"""
+        prompt = f"""Analyze this image and generate {max_prompts} optimal, concise text prompts for SAM 3.
+Return JSON array of objects with keys: prompt, confidence (0-1), reason (short).
+Keep prompts under 5 words. Focus on distinct objects.
+Return ONLY valid JSON.
+Example: [{{"prompt": "red car", "confidence": 0.9, "reason": "visible"}}]"""
         
         try:
             if self.provider == "gemini":
