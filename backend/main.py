@@ -17,10 +17,10 @@ app = FastAPI(
 
 def create_initial_data():
     with Session(engine) as session:
-        user = session.exec(select(User).where(User.email == "admin@annotix.ai")).first()
+        user = session.exec(select(User).where(User.email == settings.ADMIN_EMAIL)).first()
         if not user:
             user = User(
-                email="admin@annotix.ai",
+                email=settings.ADMIN_EMAIL,
                 hashed_password=get_password_hash("admin"),
                 full_name="Admin User",
                 is_superuser=True,
@@ -36,7 +36,7 @@ def on_startup():
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

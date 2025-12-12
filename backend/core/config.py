@@ -6,7 +6,7 @@ Environment variables can be set in a .env file in the backend directory.
 
 import os
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, List
 
 
 class Settings(BaseSettings):
@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     VERSION: str = "2.0.0"
     API_V1_STR: str = "/api/v1"
     
+    # Security
+    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    ADMIN_EMAIL: str = "admin@annotix.ai"
+
     # Paths - Using storage/ at project root for cleaner organization
     BACKEND_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     PROJECT_ROOT: str = os.path.dirname(BACKEND_DIR)
