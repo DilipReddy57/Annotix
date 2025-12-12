@@ -90,6 +90,8 @@ chromadb/
 uploads/
 output/
 exports/
+backend/data/
+test_kaggle/
 
 # ============ Frontend ============
 frontend/node_modules/
@@ -141,3 +143,9 @@ test_video.mp4
 test_*.py
 check_*.py
 verify_*.py
+
+# ============ User Data & Storage ============
+storage/
+response.json
+response_full.json
+test_kaggle_download/

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Database, Search, Brain } from "lucide-react";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "../api/client";
 
 interface RagEntry {
   label: string;
@@ -15,7 +16,7 @@ const KnowledgeBase: React.FC = () => {
   useEffect(() => {
     const fetchEntries = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/rag/entries");
+        const res = await axios.get(`${API_BASE_URL}/rag/entries`);
         setEntries(res.data);
       } catch (e) {
         console.error("Failed to fetch RAG entries", e);

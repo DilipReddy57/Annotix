@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Terminal, Activity, Play, Clock } from "lucide-react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_BASE_URL } from "../api/client";
 
 interface LogEntry {
   message: string;
@@ -16,7 +17,7 @@ const AgentStatus: React.FC = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/system/logs");
+      const res = await axios.get(`${API_BASE_URL}/system/logs`);
       setLogs(res.data);
     } catch (e) {
       console.error("Failed to fetch logs", e);
@@ -38,7 +39,7 @@ const AgentStatus: React.FC = () => {
   const handleInitialize = async () => {
     setIsInitializing(true);
     try {
-      await axios.post("http://localhost:8000/system/initialize");
+      await axios.post(`${API_BASE_URL}/system/initialize`);
     } catch (e) {
       console.error("Init failed", e);
     }

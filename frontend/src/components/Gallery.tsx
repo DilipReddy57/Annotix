@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "../api/client";
 
 interface GalleryImage {
   status?: string;
@@ -16,7 +17,7 @@ const Gallery = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/results");
+        const res = await axios.get(`${API_BASE_URL}/results`);
         setImages(Object.values(res.data));
       } catch (e) {
         console.error("Failed to fetch images", e);
@@ -53,10 +54,7 @@ const Gallery = () => {
           >
             <div className="aspect-video bg-gray-900 relative">
               <img
-                src={`http://localhost:8000/${img.image_path.replace(
-                  /\\/g,
-                  "/"
-                )}`}
+                src={`${API_BASE_URL}/${img.image_path.replace(/\\/g, "/")}`}
                 alt={img.image_path}
                 className="w-full h-full object-cover"
               />

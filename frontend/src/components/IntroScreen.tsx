@@ -19,7 +19,7 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
 
   // Check visit count and intro mode setting
   useEffect(() => {
-    const introMode = localStorage.getItem("cortex_intro_mode") || "smart";
+    const introMode = localStorage.getItem("annotix_intro_mode") || "smart";
 
     // Never mode: skip immediately
     if (introMode === "never") {
@@ -28,11 +28,11 @@ const IntroScreen = ({ onComplete }: IntroScreenProps) => {
     }
 
     const visitCount = parseInt(
-      localStorage.getItem("cortex_visits") || "0",
+      localStorage.getItem("annotix_visits") || "0",
       10
     );
     const newCount = visitCount + 1;
-    localStorage.setItem("cortex_visits", newCount.toString());
+    localStorage.setItem("annotix_visits", newCount.toString());
 
     // Smart mode: apply visit-based logic
     if (introMode === "smart") {

@@ -260,14 +260,14 @@ const SettingsPage = () => {
                   },
                 ].map((option) => {
                   const currentSetting =
-                    localStorage.getItem("cortex_intro_mode") || "smart";
+                    localStorage.getItem("annotix_intro_mode") || "smart";
                   return (
                     <button
                       key={option.id}
                       onClick={() => {
-                        localStorage.setItem("cortex_intro_mode", option.id);
+                        localStorage.setItem("annotix_intro_mode", option.id);
                         if (option.id === "always") {
-                          localStorage.setItem("cortex_visits", "0");
+                          localStorage.setItem("annotix_visits", "0");
                         }
                       }}
                       className={cn(
@@ -291,7 +291,7 @@ const SettingsPage = () => {
                 })}
                 <button
                   onClick={() => {
-                    localStorage.setItem("cortex_visits", "0");
+                    localStorage.setItem("annotix_visits", "0");
                     alert(
                       "Intro history reset! Refresh to see the intro again."
                     );

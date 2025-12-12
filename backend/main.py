@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from backend.core.config import settings
-from backend.api.routes import tasks, projects, qa, export, auth, feedback, counting, live
+from backend.api.routes import tasks, projects, qa, export, auth, feedback, counting, live, system, rag
 from backend.core.database import create_db_and_tables, engine
 from sqlmodel import Session, select
 from backend.core.models import User
@@ -17,10 +17,10 @@ app = FastAPI(
 
 def create_initial_data():
     with Session(engine) as session:
-        user = session.exec(select(User).where(User.email == "admin@cortex.ai")).first()
+        user = session.exec(select(User).where(User.email == "admin@annotix.ai")).first()
         if not user:
             user = User(
-                email="admin@cortex.ai",
+                email="admin@annotix.ai",
                 hashed_password=get_password_hash("admin"),
                 full_name="Admin User",
                 is_superuser=True,
@@ -54,6 +54,8 @@ app.include_router(export.router, prefix="/api", tags=["export"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["feedback", "learning"])
 app.include_router(counting.router, prefix="/api/counting", tags=["counting"])
 app.include_router(live.router, prefix="/api/live", tags=["live", "streaming"])
+app.include_router(system.router, prefix="/api/system", tags=["system"])
+app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 
 @app.get("/health")
 async def health_check():

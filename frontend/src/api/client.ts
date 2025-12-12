@@ -1,7 +1,9 @@
 import axios from "axios";
 
-// Use environment variable for API URL (empty string uses same origin with Netlify redirects)
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+// Use environment variable for API URL
+// Falls back to localhost:8000 for development
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const client = axios.create({
   baseURL: API_BASE_URL,

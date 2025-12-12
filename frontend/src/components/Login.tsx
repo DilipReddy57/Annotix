@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { Zap, Loader2, Lock, Mail, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../api/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,10 +23,7 @@ const Login = () => {
       formData.append("username", email);
       formData.append("password", password);
 
-      const res = await axios.post(
-        "http://localhost:8000/api/auth/token",
-        formData
-      );
+      const res = await axios.post(`${API_BASE_URL}/api/auth/token`, formData);
       login(res.data.access_token);
       navigate("/");
     } catch (err) {

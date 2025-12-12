@@ -10,7 +10,6 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  Trash2,
   X,
 } from "lucide-react";
 import axios from "axios";
@@ -61,6 +60,17 @@ const ProjectView = () => {
     "idle" | "uploading" | "success" | "error"
   >("idle");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalImages, setTotalImages] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Folder Navigation State
+  const [viewMode, setViewMode] = useState<"grid" | "folder">("grid");
+  const [currentPath, setCurrentPath] = useState<string[]>([]);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // New Project State
   const [showNewProject, setShowNewProject] = useState(false);
@@ -181,7 +191,7 @@ const ProjectView = () => {
   const fetchProjects = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(API_URL);
+      const res = await axios.get(`${API_URL}?t=${Date.now()}`);
       setProjects(res.data || []);
       if (res.data.length > 0) {
         await selectProject(res.data[0]);
@@ -215,27 +225,10 @@ const ProjectView = () => {
     }
   };
 
-  const selectProject = async (p: any) => {
-    setSelectedProject(p);
-    setSelectedVideo(null);
-    setVideoAnnotations([]);
-    try {
-      const res = await axios.get(`${API_URL}/${p.id}/images`);
-      setImages(res.data.images || []);
-    } catch (e) {
-      setImages([]);
-    }
-
-    try {
-      const vidRes = await axios.get(`${API_URL}/${p.id}/videos`);
-      setVideos(vidRes.data);
-    } catch (e) {
-      setVideos([]);
-    }
-  };
-
   const openEditor = (img: any) => {
-    const fullUrl = `http://localhost:8000/data/uploads/${selectedProject.id}/${img.filename}`;
+    const fullUrl = `${API_BASE_URL}/api/projects/${selectedProject.id}/image/${
+      img.filename
+    }?t=${Date.now()}`;
     setSelectedImage({ ...img, url: fullUrl });
   };
 
@@ -297,7 +290,9 @@ const ProjectView = () => {
 
   // ========== FULL SCREEN VIDEO ==========
   if (selectedVideo) {
-    const videoUrl = `http://localhost:8000/data/uploads/${selectedProject.id}/${selectedVideo.filename}`;
+    const videoUrl = `${API_BASE_URL}/api/projects/${
+      selectedProject.id
+    }/image/${selectedVideo.filename}?t=${Date.now()}`;
     return (
       <div className="absolute inset-0 z-10 bg-background/95 backdrop-blur-xl flex flex-col">
         <div className="h-14 border-b border-white/5 bg-card/20 backdrop-blur-md flex items-center px-6 justify-between shrink-0">
@@ -356,11 +351,119 @@ const ProjectView = () => {
     );
   }
 
+  // ========== PAGINATION LOGIC ==========
+
+  const loadMoreImages = async () => {
+    if (!selectedProject || !hasMore || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await axios.get(
+        `${API_URL}/${selectedProject.id}/images?page=${nextPage}&limit=50`
+      );
+
+      if (res.data.images && res.data.images.length > 0) {
+        setImages((prev) => [...prev, ...res.data.images]);
+        setPage(nextPage);
+        setHasMore(res.data.images.length === 50); // If less than limit, no more
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      console.error("Failed to load more images", e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const selectProject = async (p: any) => {
+    setSelectedProject(p);
+    setSelectedVideo(null);
+    setVideoAnnotations([]);
+    setPage(1);
+    setHasMore(true);
+    setImages([]); // Clear immediate
+
+    try {
+      // Initial fetch (Page 1)
+      const res = await axios.get(`${API_URL}/${p.id}/images?page=1&limit=50`);
+      setImages(res.data.images || []);
+      setTotalImages(res.data.total || 0);
+      setHasMore((res.data.images?.length || 0) === 50);
+    } catch (e) {
+      console.error("Failed to load project images", e);
+      setImages([]);
+    }
+
+    try {
+      const vidRes = await axios.get(`${API_URL}/${p.id}/videos`);
+      setVideos(vidRes.data);
+    } catch (e) {
+      setVideos([]);
+    }
+  };
+
+  // ========== FOLDER NAVIGATION LOGIC ==========
+
+  // Group assets by folder for the current path
+  const getFolderContent = () => {
+    if (viewMode === "grid") return { folders: [], files: allAssets };
+
+    const currentPathStr =
+      currentPath.length > 0 ? currentPath.join("/") + "/" : "";
+    const folders = new Set<string>();
+    const files: any[] = [];
+
+    allAssets.forEach((asset) => {
+      // Normalize path separators
+      const cleanFilename = asset.filename.replace(/\\/g, "/");
+
+      if (!cleanFilename.startsWith(currentPathStr)) return;
+
+      const relativePath = cleanFilename.slice(currentPathStr.length);
+      const parts = relativePath.split("/");
+
+      if (parts.length > 1) {
+        // It's in a subfolder
+        folders.add(parts[0]);
+      } else {
+        // It's a file in the current directory
+        files.push(asset);
+      }
+    });
+
+    return {
+      folders: Array.from(folders).sort(),
+      files: files,
+    };
+  };
+
+  const { folders, files: currentFiles } = getFolderContent();
+
+  const handleSyncProject = async () => {
+    if (!selectedProject || isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const res = await axios.post(`${API_URL}/${selectedProject.id}/sync`);
+      // Reload project to get new files
+      await selectProject(selectedProject);
+      alert(
+        `Sync complete: ${res.data.added} new files added, ${res.data.updated} repaired.`
+      );
+    } catch (e) {
+      console.error("Sync failed", e);
+      alert("Sync failed. Check console.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   // ========== MAIN GALLERY VIEW ==========
   return (
     <div className="h-full flex">
       {/* Sidebar - Project List */}
       <div className="w-64 shrink-0 border-r border-white/10 bg-card/30 backdrop-blur-md flex flex-col">
+        {/* ... sidebar content same as before ... */}
         <div className="p-4 border-b border-white/10">
           <h3 className="text-sm font-bold text-white flex items-center gap-2">
             <Upload size={16} className="text-primary" />
@@ -415,6 +518,7 @@ const ProjectView = () => {
         <div className="p-3 border-t border-white/10">
           {showNewProject ? (
             <div className="space-y-2">
+              {/* ... new project form ... */}
               <input
                 type="text"
                 placeholder="Project name"
@@ -490,48 +594,111 @@ const ProjectView = () => {
           className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0"
         >
           <div>
-            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-              {selectedProject?.name || "Loading..."}
-              <span className="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider">
-                Active
-              </span>
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                {selectedProject?.name || "Loading..."}
+                <span className="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] text-primary font-bold uppercase tracking-wider">
+                  Active
+                </span>
+              </h2>
+              {/* Sync Button */}
+              <button
+                onClick={handleSyncProject}
+                disabled={isSyncing}
+                className="p-1.5 rounded-md hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
+                title="Rescan project files (Fix missing assets)"
+              >
+                <div
+                  className={cn(
+                    "transition-transform",
+                    isSyncing && "animate-spin"
+                  )}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                    <path d="M16 21h5v-5" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+
             <p className="text-sm text-muted-foreground mt-1">
               {isLoading
                 ? "Loading assets..."
-                : `${allAssets.length} assets ready for annotation.`}
+                : `${
+                    totalImages > 0 ? totalImages : allAssets.length
+                  } assets available (${allAssets.length} loaded)`}
             </p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Upload Status Indicator */}
-            {uploadStatus !== "idle" && (
-              <div
+            {/* View Mode Toggle */}
+            <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+              <button
+                onClick={() => setViewMode("grid")}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium",
-                  uploadStatus === "uploading" && "bg-primary/10 text-primary",
-                  uploadStatus === "success" && "bg-success/10 text-success",
-                  uploadStatus === "error" &&
-                    "bg-destructive/10 text-destructive"
+                  "p-1.5 rounded-md transition-all",
+                  viewMode === "grid"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted-foreground hover:text-white"
                 )}
+                title="Grid View"
               >
-                {uploadStatus === "uploading" && (
-                  <>
-                    <Loader2 size={14} className="animate-spin" /> Uploading...
-                  </>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="7" height="7" x="3" y="3" rx="1" />
+                  <rect width="7" height="7" x="14" y="3" rx="1" />
+                  <rect width="7" height="7" x="14" y="14" rx="1" />
+                  <rect width="7" height="7" x="3" y="14" rx="1" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode("folder")}
+                className={cn(
+                  "p-1.5 rounded-md transition-all",
+                  viewMode === "folder"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted-foreground hover:text-white"
                 )}
-                {uploadStatus === "success" && (
-                  <>
-                    <CheckCircle size={14} /> Uploaded!
-                  </>
-                )}
-                {uploadStatus === "error" && (
-                  <>
-                    <XCircle size={14} /> Failed
-                  </>
-                )}
-              </div>
-            )}
+                title="Folder View"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+                </svg>
+              </button>
+            </div>
+
             <div className="relative group">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors"
@@ -543,9 +710,7 @@ const ProjectView = () => {
                 className="w-48 bg-card/30 backdrop-blur-sm border border-white/10 rounded-lg py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-primary/50 text-white transition-colors"
               />
             </div>
-            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-white transition-colors flex items-center gap-2 backdrop-blur-md">
-              <Filter size={16} /> Filters
-            </button>
+
             <label
               htmlFor="studio-file-upload"
               className={cn(
@@ -564,8 +729,47 @@ const ProjectView = () => {
           </div>
         </motion.div>
 
-        {/* Gallery Grid */}
+        {/* Gallery Content */}
         <div className="flex-1 overflow-y-auto pr-2 pb-10">
+          {/* Breadcrumbs for Folder View */}
+          {viewMode === "folder" && (
+            <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+              <button
+                onClick={() => setCurrentPath([])}
+                className="hover:text-primary transition-colors flex items-center gap-1"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Root
+              </button>
+              {currentPath.map((folder, index) => (
+                <div key={folder} className="flex items-center gap-2">
+                  <span>/</span>
+                  <button
+                    onClick={() =>
+                      setCurrentPath(currentPath.slice(0, index + 1))
+                    }
+                    className="hover:text-primary transition-colors font-medium text-white"
+                  >
+                    {folder}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {allAssets.length === 0 && !isLoading ? (
             // Empty State
             <motion.div
@@ -583,112 +787,159 @@ const ProjectView = () => {
                 Drop images or videos on the Home page, or click "Upload" to add
                 media to this project.
               </p>
-              <button className="px-6 py-3 bg-primary hover:bg-primary/90 text-background font-bold rounded-lg transition-all flex items-center gap-2">
-                <Plus size={18} /> Add Your First Asset
-              </button>
             </motion.div>
           ) : (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={staggerGrid}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5"
-            >
-              {allAssets.map((asset) => (
-                <motion.div
-                  key={asset.id}
-                  variants={fadeIn}
-                  onClick={() =>
-                    asset.assetType === "video"
-                      ? openVideoPlayer(asset)
-                      : openEditor(asset)
-                  }
-                  className="group aspect-[4/3] bg-card/20 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-primary/50 transition-all hover:bg-card/40 hover:scale-[1.02]"
-                >
-                  {/* Media Thumbnail */}
-                  <div className="absolute inset-0">
-                    {asset.assetType === "video" ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-500/10 to-transparent text-muted-foreground group-hover:text-white transition-colors">
-                        <Video size={32} />
-                        <span className="text-[10px] mt-2 uppercase tracking-wider">
-                          Video
-                        </span>
-                      </div>
-                    ) : (
-                      <img
-                        src={`http://localhost:8000/data/uploads/${selectedProject?.id}/${asset.filename}`}
-                        alt={asset.filename}
-                        className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                        loading="lazy"
-                      />
-                    )}
-                  </div>
-
-                  {/* Hover Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-200">
-                    <p className="text-xs font-medium text-white truncate">
-                      {asset.filename}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {asset.annotations?.length || 0} annotations
-                    </p>
-                  </div>
-
-                  {/* Top Badges */}
-                  <div className="absolute top-2 right-2 flex gap-1.5">
-                    {asset.assetType === "video" && (
-                      <div className="p-1.5 rounded-md bg-black/60 text-white backdrop-blur-md">
-                        <Video size={10} />
-                      </div>
-                    )}
-                    {/* Status Badges */}
-                    {asset.status === "pending" && (
-                      <div className="px-2 py-1 rounded-md bg-amber-500/20 text-amber-400 backdrop-blur-md text-[9px] font-medium">
-                        Pending
-                      </div>
-                    )}
-                    {asset.status === "processing" && (
-                      <div className="px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
-                        <Loader2 size={8} className="animate-spin" />
-                        Processing
-                      </div>
-                    )}
-                    {asset.status === "completed" && (
-                      <div className="px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
-                        <CheckCircle size={8} />
-                        Done
-                      </div>
-                    )}
-                    {asset.status === "error" && (
-                      <div className="px-2 py-1 rounded-md bg-red-500/20 text-red-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
-                        <XCircle size={8} />
-                        Error
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Add New Card - Upload Zone */}
-              <motion.label
-                htmlFor="studio-file-upload"
-                variants={fadeIn}
-                className={cn(
-                  "aspect-[4/3] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all backdrop-blur-sm",
-                  isDragging
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5"
-                )}
+            <>
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={staggerGrid}
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5"
               >
-                <Upload size={28} />
-                <span className="text-xs font-medium mt-2">
-                  {isDragging ? "Drop files here" : "Add New"}
-                </span>
-                <span className="text-[10px] text-muted-foreground mt-1">
-                  Click or drag files
-                </span>
-              </motion.label>
-            </motion.div>
+                {/* Folder Cards (Only in Folder View) */}
+                {viewMode === "folder" &&
+                  folders.map((folder) => (
+                    <motion.div
+                      key={folder}
+                      variants={fadeIn}
+                      onClick={() => setCurrentPath([...currentPath, folder])}
+                      className="aspect-[4/3] bg-card/10 backdrop-blur-sm rounded-xl border border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:bg-card/30 hover:border-primary/50 transition-all group"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="40"
+                        height="40"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-primary/70 group-hover:text-primary group-hover:scale-110 transition-all mb-3"
+                      >
+                        <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+                      </svg>
+                      <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
+                        {folder}
+                      </span>
+                    </motion.div>
+                  ))}
+
+                {/* File Cards */}
+                {(viewMode === "grid" ? allAssets : currentFiles).map(
+                  (asset) => (
+                    <motion.div
+                      key={asset.id}
+                      variants={fadeIn}
+                      onClick={() =>
+                        asset.assetType === "video"
+                          ? openVideoPlayer(asset)
+                          : openEditor(asset)
+                      }
+                      className="group aspect-[4/3] bg-card/20 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-primary/50 transition-all hover:bg-card/40 hover:scale-[1.02]"
+                    >
+                      {/* Media Thumbnail */}
+                      <div className="absolute inset-0">
+                        {asset.assetType === "video" ? (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-500/10 to-transparent text-muted-foreground group-hover:text-white transition-colors">
+                            <Video size={32} />
+                            <span className="text-[10px] mt-2 uppercase tracking-wider">
+                              Video
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={`${API_BASE_URL}/api/projects/${
+                              selectedProject?.id
+                            }/image/${asset.filename}?t=${Date.now()}`}
+                            alt={asset.filename}
+                            className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
+
+                      {/* Hover Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-200">
+                        <p
+                          className="text-xs font-medium text-white truncate"
+                          title={asset.filename}
+                        >
+                          {asset.filename.split("/").pop()}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {asset.annotations?.length || 0} annotations
+                        </p>
+                      </div>
+
+                      {/* Top Badges */}
+                      <div className="absolute top-2 right-2 flex gap-1.5">
+                        {asset.assetType === "video" && (
+                          <div className="p-1.5 rounded-md bg-black/60 text-white backdrop-blur-md">
+                            <Video size={10} />
+                          </div>
+                        )}
+                        {/* Status Badges */}
+                        {asset.status === "pending" && (
+                          <div className="px-2 py-1 rounded-md bg-amber-500/20 text-amber-400 backdrop-blur-md text-[9px] font-medium">
+                            Pending
+                          </div>
+                        )}
+                        {asset.status === "processing" && (
+                          <div className="px-2 py-1 rounded-md bg-blue-500/20 text-blue-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
+                            <Loader2 size={8} className="animate-spin" />
+                            Processing
+                          </div>
+                        )}
+                        {asset.status === "completed" && (
+                          <div className="px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
+                            <CheckCircle size={8} />
+                            Done
+                          </div>
+                        )}
+                        {asset.status === "error" && (
+                          <div className="px-2 py-1 rounded-md bg-red-500/20 text-red-400 backdrop-blur-md text-[9px] font-medium flex items-center gap-1">
+                            <XCircle size={8} />
+                            Error
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )
+                )}
+              </motion.div>
+
+              {/* Load More Button */}
+              {hasMore && viewMode === "grid" && (
+                <div className="mt-8 flex justify-center pb-8">
+                  <button
+                    onClick={loadMoreImages}
+                    disabled={isLoadingMore}
+                    className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-medium text-white transition-all flex items-center gap-2 group"
+                  >
+                    {isLoadingMore ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="group-hover:translate-y-0.5 transition-transform"
+                      >
+                        <path d="m6 9 6 6 6-6" />
+                      </svg>
+                    )}
+                    {isLoadingMore ? "Loading..." : "Load More"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, DragEvent, ChangeEvent } from "react";
 import { Upload, FileVideo, Image as ImageIcon, Loader2 } from "lucide-react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/client";
 
 interface UploadZoneProps {
   onUploadComplete?: () => void;
@@ -37,7 +38,7 @@ const UploadZone: React.FC<UploadZoneProps> = ({ onUploadComplete }) => {
 
     try {
       // 1. Upload
-      await axios.post("http://localhost:8000/upload", formData, {
+      await axios.post(`${API_BASE_URL}/api/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

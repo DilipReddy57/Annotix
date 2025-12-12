@@ -127,16 +127,21 @@ const AnnotationEditor: React.FC<EditorProps> = ({
     };
   }, [imageUrl, annotations, selectedId]);
 
-  const handleMagicSegment = async () => {
-    if (!prompt.trim()) return;
+  const handleMagicSegment = async (presetPrompt?: string) => {
+    const segmentPrompt = presetPrompt || prompt.trim();
+    if (!segmentPrompt) return;
     setIsProcessing(true);
     try {
-      const results = await api.segmentInteractive(projectId, imageId, prompt);
+      const results = await api.segmentInteractive(
+        projectId,
+        imageId,
+        segmentPrompt
+      );
       const newAnns = results.map((r: any) => ({
         id: crypto.randomUUID(),
-        label: r.label,
+        label: r.label || segmentPrompt,
         bbox: r.bbox,
-        score: r.score,
+        score: r.score || 0.9,
         visible: true,
       }));
       setAnnotations([...annotations, ...newAnns]);
@@ -144,7 +149,7 @@ const AnnotationEditor: React.FC<EditorProps> = ({
       setTool("select");
     } catch (e) {
       console.error("Segmentation failed", e);
-      alert("Failed to segment. Check backend logs.");
+      alert("SAM3 segmentation failed. Check if the model is loaded.");
     } finally {
       setIsProcessing(false);
     }
@@ -186,28 +191,73 @@ const AnnotationEditor: React.FC<EditorProps> = ({
 
       {/* Magic Prompt Input (Visible when 'segment' tool is active) */}
       {tool === "segment" && (
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex gap-2 animate-in slide-in-from-top-4 duration-300">
-          <input
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleMagicSegment()}
-            placeholder="Describe object to segment..."
-            className="w-80 bg-black/50 backdrop-blur-xl border border-primary/50 text-white px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary shadow-2xl shadow-primary/20"
-            autoFocus
-          />
-          <button
-            onClick={handleMagicSegment}
-            disabled={isProcessing}
-            className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl font-medium transition-all shadow-lg flex items-center gap-2"
-          >
-            {isProcessing ? (
-              <Loader2 className="animate-spin" size={18} />
-            ) : (
-              <Wand2 size={18} />
-            )}
-            Segment
-          </button>
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 animate-in slide-in-from-top-4 duration-300">
+          {/* Preset Quick Buttons */}
+          <div className="flex gap-2 bg-black/60 backdrop-blur-xl rounded-full px-4 py-2 border border-white/10">
+            <PresetButton
+              label="All Objects"
+              emoji="✨"
+              onClick={() => handleMagicSegment("all objects")}
+              disabled={isProcessing}
+            />
+            <PresetButton
+              label="Person"
+              emoji="👤"
+              onClick={() => handleMagicSegment("person")}
+              disabled={isProcessing}
+            />
+            <PresetButton
+              label="Car"
+              emoji="🚗"
+              onClick={() => handleMagicSegment("car")}
+              disabled={isProcessing}
+            />
+            <PresetButton
+              label="Animal"
+              emoji="🐕"
+              onClick={() => handleMagicSegment("animal")}
+              disabled={isProcessing}
+            />
+            <PresetButton
+              label="Text"
+              emoji="📝"
+              onClick={() => handleMagicSegment("text")}
+              disabled={isProcessing}
+            />
+          </div>
+
+          {/* Custom Prompt Input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleMagicSegment()}
+              placeholder="Or type custom object..."
+              className="w-80 bg-black/50 backdrop-blur-xl border border-primary/50 text-white px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary shadow-2xl shadow-primary/20"
+              autoFocus
+            />
+            <button
+              onClick={() => handleMagicSegment()}
+              disabled={isProcessing || !prompt.trim()}
+              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-xl font-medium transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
+            >
+              {isProcessing ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <Wand2 size={18} />
+              )}
+              Segment
+            </button>
+          </div>
+
+          {/* Processing Status */}
+          {isProcessing && (
+            <div className="flex items-center gap-2 text-primary text-sm bg-black/60 backdrop-blur-xl rounded-full px-4 py-2">
+              <Loader2 className="animate-spin" size={14} />
+              SAM3 is analyzing the image...
+            </div>
+          )}
         </div>
       )}
 
@@ -361,6 +411,27 @@ const ToolButton = ({ icon, active, onClick, tooltip }: any) => (
     {active && (
       <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
     )}
+  </button>
+);
+
+const PresetButton = ({
+  label,
+  emoji,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  emoji: string;
+  onClick: () => void;
+  disabled: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-primary/20 text-white text-xs font-medium transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+  >
+    <span>{emoji}</span>
+    <span>{label}</span>
   </button>
 );
 

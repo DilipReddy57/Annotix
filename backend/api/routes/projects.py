@@ -3,7 +3,7 @@ from typing import List, Dict
 import shutil
 import os
 import json
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from backend.core.config import settings
 from backend.core.models import Project, Image, Annotation, Video
 from backend.core.database import get_session, engine
@@ -198,23 +198,40 @@ def download_dataset_task(project_id: str, url: str, source: str, project_dir: s
                 downloaded_files.append(filepath)
                 logger.info(f"Downloaded {filename}")
         
-        # Register downloaded images in the database
+        # Call the robust sync logic to register files
+        # This handles nested folders, different formats, and ensures DB consistency
+        # We invoke the sync logic directly since we're already in a background task
+        # and don't need the HTTP overhead, but using a helper function would be cleaner.
+        # For now, let's replicate the core 'scan and add' quickly or trigger the endpoint logic.
+        
+        # Re-using the logic manually for the task to avoid dependency loops or session issues
+        # Ideally this should call a shared service function.
+        
+        logger.info("Scanning for images recursively...")
         image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+        found_count = 0
+        
         with SqlSession(engine) as session:
-            for filepath in downloaded_files:
-                ext = os.path.splitext(filepath)[1].lower()
-                if ext in image_extensions:
-                    filename = os.path.basename(filepath)
-                    image = Image(
-                        project_id=project_id,
-                        filename=filename,
-                        status="pending",
-                        width=0,
-                        height=0
-                    )
-                    session.add(image)
+            for root, _, files in os.walk(project_dir):
+                for file in files:
+                    if os.path.splitext(file)[1].lower() in image_extensions:
+                        rel_path = os.path.relpath(os.path.join(root, file), project_dir).replace("\\", "/")
+                        
+                        # Check existance
+                        exists = session.exec(select(Image).where(Image.project_id == project_id, Image.filename == rel_path)).first()
+                        if not exists:
+                            image = Image(
+                                project_id=project_id,
+                                filename=rel_path,
+                                status="pending",
+                                width=0,
+                                height=0
+                            )
+                            session.add(image)
+                            found_count += 1
             session.commit()
-            logger.info(f"Registered {len(downloaded_files)} images in database")
+            
+        logger.info(f"Registered {found_count} images in database via detailed scan")
                 
         logger.info(f"Dataset import completed for project {project_id}")
         
@@ -263,32 +280,158 @@ async def get_project(project_id: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Project not found")
     return project
 
-@router.get("/{project_id}/images")
-async def get_project_images(project_id: str, session: Session = Depends(get_session)):
-    """Get all images for a project with their annotations."""
+@router.get("/{project_id}/image/{filename:path}")
+async def serve_project_image(project_id: str, filename: str):
+    """
+    Serve an image file from a project using direct relative path.
+    The 'filename' in the DB is now the relative path from project_dir.
+    """
+    from fastapi.responses import FileResponse
+    
+    project_dir = os.path.join(settings.UPLOAD_DIR, project_id)
+    if not os.path.exists(project_dir):
+        raise HTTPException(status_code=404, detail="Project directory not found")
+    
+    # Securely join paths (prevent directory traversal)
+    file_path = os.path.abspath(os.path.join(project_dir, filename))
+    if not file_path.startswith(os.path.abspath(project_dir)):
+         raise HTTPException(status_code=403, detail="Access denied")
+
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    
+    raise HTTPException(status_code=404, detail=f"Image server error: File not found at {filename}")
+
+
+@router.post("/{project_id}/sync")
+async def sync_project_images(project_id: str, session: Session = Depends(get_session)):
+    """
+    Scans the project directory and updates the database to match the filesystem.
+    - Adds new images found on disk.
+    - Updates paths for existing images (migration).
+    - Helper for imports or manual rescan.
+    """
     project = session.get(Project, project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+         raise HTTPException(status_code=404, detail="Project not found")
+            
+    project_dir = os.path.join(settings.UPLOAD_DIR, project_id)
+    if not os.path.exists(project_dir):
+        return {"status": "error", "message": "Project directory missing"}
+
+    # 1. Scan filesystem
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+    fs_files = {} # Map basename -> full_relative_path (for migration)
+    fs_paths = set() # Set of all full_relative_paths
     
-    images = session.exec(select(Image).where(Image.project_id == project_id)).all()
+    for root, _, files in os.walk(project_dir):
+        for file in files:
+            if os.path.splitext(file)[1].lower() in image_extensions:
+                rel_path = os.path.relpath(os.path.join(root, file), project_dir)
+                # Normalize slashes for DB consistency
+                rel_path = rel_path.replace("\\", "/") 
+                fs_paths.add(rel_path)
+                fs_files[file] = rel_path
+
+    # 2. Get current DB state
+    db_images = session.exec(select(Image).where(Image.project_id == project_id)).all()
     
-    result = []
-    for img in images:
-        annotations = session.exec(select(Annotation).where(Annotation.image_id == img.id)).all()
-        result.append({
-            "id": img.id,
-            "filename": img.filename,
-            "image_path": img.image_path,
-            "status": img.status,
-            "width": img.width,
-            "height": img.height,
-            "annotations": [
-                {"id": a.id, "label": a.label, "bbox": a.bbox, "confidence": a.confidence}
-                for a in annotations
-            ]
-        })
+    added = 0
+    updated = 0
+    existing_paths = set()
     
-    return {"project_id": project_id, "images": result, "count": len(result)}
+    for img in db_images:
+        # Check if this is a "legacy" entry with just basename (and it actually exists in a subdir)
+        if img.filename not in fs_paths and img.filename in fs_files:
+            # Migration: Update to the correct relative path found on disk
+            new_path = fs_files[img.filename]
+            logger.info(f"migrating image {img.id}: {img.filename} -> {new_path}")
+            img.filename = new_path
+            session.add(img)
+            updated += 1
+            existing_paths.add(new_path)
+        elif img.filename in fs_paths:
+            existing_paths.add(img.filename)
+        else:
+            # File missing from disk
+            if img.status != "missing":
+                img.status = "missing"
+                session.add(img)
+
+    # 3. Add new files
+    for rel_path in fs_paths:
+        if rel_path not in existing_paths:
+            new_img = Image(
+                project_id=project_id,
+                filename=rel_path,
+                status="pending",
+                width=0,
+                height=0
+            )
+            session.add(new_img)
+            added += 1
+    
+    session.commit()
+    
+    return {
+        "status": "synced",
+        "total_files": len(fs_paths),
+        "added": added,
+        "updated": updated,
+        "message": f"Sync complete: {len(fs_paths)} images found, {added} added, {updated} repaired."
+    }
+
+
+@router.get("/{project_id}/images")
+@router.get("/{project_id}/images")
+async def get_project_images(
+    project_id: str, 
+    page: int = 1, 
+    limit: int = 50,
+    session: Session = Depends(get_session)
+):
+    try:
+        project = session.get(Project, project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        offset = (page - 1) * limit
+        
+        # Get total count
+        total_count = session.exec(select(func.count(Image.id)).where(Image.project_id == project_id)).one()
+        
+        # Get paginated images
+        stmt = select(Image).where(Image.project_id == project_id).offset(offset).limit(limit)
+        images = session.exec(stmt).all()
+        
+        result = []
+        for img in images:
+            ann_stmt = select(Annotation).where(Annotation.image_id == img.id)
+            annotations = session.exec(ann_stmt).all()
+            
+            result.append({
+                "id": img.id,
+                "filename": img.filename,
+                "status": img.status,
+                "width": img.width,
+                "height": img.height,
+                "annotations": [
+                    {"id": a.id, "label": a.label, "bbox": a.bbox, "confidence": a.confidence}
+                    for a in annotations
+                ]
+            })
+        
+        return {
+            "project_id": project_id, 
+            "images": result, 
+            "total": total_count,
+            "page": page,
+            "limit": limit
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/{project_id}/upload")
 async def upload_images(

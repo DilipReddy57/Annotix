@@ -1,8 +1,10 @@
 from sqlmodel import SQLModel, create_engine, Session
 from backend.core.config import settings
+import os
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+# Use absolute path to database in storage directory
+database_path = os.path.join(settings.STORAGE_DIR, "database.db")
+sqlite_url = f"sqlite:///{database_path}"
 
 connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)

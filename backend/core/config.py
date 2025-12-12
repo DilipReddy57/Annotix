@@ -10,19 +10,21 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Cortex.AI - Autonomous Annotation Agent"
+    PROJECT_NAME: str = "ANNOTIX - Autonomous Annotation Agent"
     VERSION: str = "2.0.0"
     API_V1_STR: str = "/api/v1"
     
-    # Paths
-    BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    DATA_DIR: str = os.path.join(BASE_DIR, "data")
-    UPLOAD_DIR: str = os.path.join(DATA_DIR, "uploads")
-    OUTPUT_DIR: str = os.path.join(DATA_DIR, "output")
-    MODELS_DIR: str = os.path.join(os.path.dirname(BASE_DIR), "models")
+    # Paths - Using storage/ at project root for cleaner organization
+    BACKEND_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    PROJECT_ROOT: str = os.path.dirname(BACKEND_DIR)
+    STORAGE_DIR: str = os.path.join(PROJECT_ROOT, "storage")
+    UPLOAD_DIR: str = os.path.join(STORAGE_DIR, "projects")
+    OUTPUT_DIR: str = os.path.join(STORAGE_DIR, "exports")
+    MODELS_DIR: str = os.path.join(STORAGE_DIR, "models")
+    DATA_DIR: str = STORAGE_DIR  # Legacy alias
     
     # SAM 3 Configuration
-    SAM3_PATH: str = os.path.join(BASE_DIR, "sam3")  # Path to SAM 3 installation
+    SAM3_PATH: str = os.path.join(BACKEND_DIR, "sam3")  # Path to SAM 3 installation
     SAM3_CHECKPOINT: Optional[str] = None  # Auto-download from HuggingFace if None
     SAM3_RESOLUTION: int = 1008  # SAM 3 default resolution
     SAM3_CONFIDENCE_THRESHOLD: float = 0.5  # Minimum confidence for detections
@@ -31,8 +33,12 @@ class Settings(BaseSettings):
     DEVICE: str = "cuda"  # "cuda" or "cpu"
     COMPILE_MODEL: bool = False  # Enable torch.compile for faster inference
     
-    # Database
-    DATABASE_URL: str = "sqlite:///database.db"
+    # Database - Now in storage/
+    @property
+    def database_path(self) -> str:
+        return os.path.join(self.STORAGE_DIR, "database.db")
+    
+    DATABASE_URL: str = ""  # Will be set after class init
     
     # RAG Configuration
     CHROMADB_PATH: Optional[str] = None  # Defaults to DATA_DIR/chromadb
