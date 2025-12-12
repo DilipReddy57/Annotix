@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
-from typing import Optional
-from jose import jwt
+from typing import Optional, Union
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 # TODO: Move these to environment variables for production

@@ -1,5 +1,7 @@
 import argparse
+import sys
 import os
+import asyncio
 from backend.pipeline.orchestrator import AnnotationPipeline
 from backend.core.logger import get_logger
 

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Depends
-from fastapi.concurrency import run_in_threadpool
+from typing import List
 import shutil
 import os
 import uuid
-import aiofiles
-from sqlmodel import Session, select, func, text
+import json
+from sqlmodel import Session, select, func
 from backend.core.config import settings
 from backend.core.logger import get_logger
 from backend.pipeline.orchestrator import AnnotationPipeline
@@ -24,10 +24,8 @@ async def upload_image(file: UploadFile = File(...), background_tasks: Backgroun
     file_path = os.path.join(settings.UPLOAD_DIR, f"{task_id}_{file.filename}")
     
     try:
-        # Use aiofiles for non-blocking file I/O
-        async with aiofiles.open(file_path, 'wb') as out_file:
-            while content := await file.read(1024 * 1024):  # Read in 1MB chunks
-                await out_file.write(content)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
     except Exception as e:
         logger.error(f"File upload failed: {e}")
         raise HTTPException(status_code=500, detail="File upload failed")
@@ -51,8 +49,8 @@ async def segment_text(task_id: str, prompt: str):
         raise HTTPException(status_code=400, detail="Image path missing")
         
     try:
-        # Run pipeline in threadpool to avoid blocking event loop
-        output = await run_in_threadpool(pipeline.process_image, image_path, prompt=prompt)
+        # Run pipeline synchronously for refined prompt (or async if preferred)
+        output = pipeline.process_image(image_path, prompt=prompt)
         result["annotations"] = output["annotations"]
         result["status"] = "completed"
         results_store[task_id] = result
@@ -75,19 +73,19 @@ async def get_analytics(session: Session = Depends(get_session)):
     total_images = session.exec(select(func.count(Image.id))).one()
     total_annotations = session.exec(select(func.count(Annotation.id))).one()
     
-    # Class distribution using SQL Group By for efficiency
-    # Note: If database is SQLite and label is a column, this works.
-    # If label is inside JSON, we need native SQL. Assuming Annotation has 'label' column as per model.
-    try:
-        statement = select(Annotation.label, func.count(Annotation.id)).group_by(Annotation.label).order_by(func.count(Annotation.id).desc()).limit(10)
-        results = session.exec(statement).all()
-        sorted_classes = {label: count for label, count in results}
-        categories_count = session.exec(select(func.count(func.distinct(Annotation.label)))).one()
-    except Exception:
-        # Fallback for complex schemas or if label is missing (safer than crashing)
-        sorted_classes = {}
-        categories_count = 0
+    # Class distribution
+    # SQLite doesn't support easy group by on JSON fields or complex queries easily via SQLModel directly for this without raw SQL or loading data
+    # For MVP with SQLite, we can fetch annotations and aggregate in Python if dataset is small
+    # Or use a raw SQL query.
+    
+    annotations = session.exec(select(Annotation)).all()
+    class_counts = {}
+    for ann in annotations:
+        class_counts[ann.label] = class_counts.get(ann.label, 0) + 1
         
+    # Sort and take top 10
+    sorted_classes = dict(sorted(class_counts.items(), key=lambda item: item[1], reverse=True)[:10])
+    
     # ROI Metrics (Mock calculation based on counts)
     human_cost_per_ann = 0.50 # $0.50 per annotation
     agent_cost_per_ann = 0.01 # $0.01 per annotation
@@ -105,7 +103,7 @@ async def get_analytics(session: Session = Depends(get_session)):
         "total_images": total_images,
         "total_annotations": total_annotations,
         "class_distribution": sorted_classes,
-        "categories": categories_count,
+        "categories": len(class_counts),
         "roi_metrics": {
             "human_cost_est": round(human_cost_est, 2),
             "agent_cost_est": round(agent_cost_est, 2),

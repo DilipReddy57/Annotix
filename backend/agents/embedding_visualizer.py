@@ -8,10 +8,13 @@ Features:
 - Interactive embedding exploration
 """
 
+import os
 import numpy as np
 from typing import Dict, Any, List, Optional, Tuple
+import json
 
 from backend.core.logger import get_logger
+from backend.core.config import settings
 
 logger = get_logger("embedding_viz")
 

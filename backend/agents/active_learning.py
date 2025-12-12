@@ -8,11 +8,14 @@ Features:
 - Query strategies for efficient annotation workflows
 """
 
+import os
 import numpy as np
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
+import json
 
 from backend.core.logger import get_logger
+from backend.core.config import settings
 
 logger = get_logger("active_learning")
 

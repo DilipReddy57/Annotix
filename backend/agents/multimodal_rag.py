@@ -12,7 +12,7 @@ import os
 import json
 import uuid
 import numpy as np
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from collections import Counter, defaultdict
 
 from backend.core.logger import get_logger
@@ -97,7 +97,7 @@ class MultiModalRAGAgent:
                 }
             )
             
-            logger.info("✅ Multi-Modal ChromaDB initialized")
+            logger.info(f"✅ Multi-Modal ChromaDB initialized")
             logger.info(f"   Visual entries: {self.visual_collection.count()}")
             logger.info(f"   Text entries: {self.text_collection.count()}")
             

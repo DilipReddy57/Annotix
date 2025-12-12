@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 
 interface AnnotationRainProps {
   className?: string;
@@ -51,10 +51,6 @@ interface Drop {
 }
 
 const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
-  // Use state to hold the drops. This ensures we only generate them once on mount,
-  // avoiding hydration mismatch issues and impure render calls.
-  const [drops, setDrops] = useState<Drop[]>([]);
-
   // Color palette - rich, artistic colors
   const colors = [
     "rgb(139, 92, 246)", // Violet
@@ -64,7 +60,8 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
     "rgb(245, 158, 11)", // Amber
   ];
 
-  useEffect(() => {
+  // Generate rain drops - memoized for performance
+  const drops = useMemo(() => {
     const dropList: Drop[] = [];
     const numDrops = 18; // Optimized drop count
 
@@ -87,14 +84,9 @@ const AnnotationRain = ({ className = "" }: AnnotationRainProps) => {
         colorVar: colors[i % colors.length],
       });
     }
-    setDrops(dropList);
-    // Empty dependency array ensures this runs only once on client mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  if (drops.length === 0) {
-    return null; // Don't render anything on server/initial render to avoid hydration mismatch
-  }
+    return dropList;
+  }, []);
 
   return (
     <div
