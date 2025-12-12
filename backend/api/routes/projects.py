@@ -488,7 +488,20 @@ async def upload_images(
     }
 
 @router.post("/{project_id}/images/{image_id}/annotate")
-async def annotate_image(project_id: str, image_id: str, background_tasks: BackgroundTasks, session: Session = Depends(get_session)):
+async def annotate_image(
+    project_id: str, 
+    image_id: str, 
+    background_tasks: BackgroundTasks, 
+    turbo_mode: bool = False,
+    session: Session = Depends(get_session)
+):
+    """
+    Trigger annotation for a specific image.
+    
+    Args:
+        turbo_mode: If True, skip CLIP embeddings and RAG for maximum speed.
+                   Default (False) uses fast mode with real embeddings.
+    """
     image = session.get(Image, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -497,12 +510,13 @@ async def annotate_image(project_id: str, image_id: str, background_tasks: Backg
     session.add(image)
     session.commit()
     
-    # Run pipeline
-    background_tasks.add_task(run_annotation_task, project_id, image_id)
+    # Run pipeline with turbo mode option
+    background_tasks.add_task(run_annotation_task, project_id, image_id, turbo_mode)
     
-    return {"status": "queued", "image_id": image_id}
+    return {"status": "queued", "image_id": image_id, "mode": "turbo" if turbo_mode else "fast"}
 
-def run_annotation_task(project_id: str, image_id: str):
+def run_annotation_task(project_id: str, image_id: str, turbo_mode: bool = False):
+    """Background task for annotation processing."""
     # Create a new session for the background task
     with Session(engine) as session:
         image = session.get(Image, image_id)
@@ -513,13 +527,16 @@ def run_annotation_task(project_id: str, image_id: str):
         try:
             file_path = os.path.join(settings.UPLOAD_DIR, project_id, image.filename)
             
-            # Call the smart orchestrator
-            # This enables Auto-Prompt generation and background analytics
+            # Call the smart orchestrator with turbo mode option
             result = pipeline.smart_process_image(
                 file_path=file_path,
                 project_id=project_id,
-                use_auto_prompts=True
+                use_auto_prompts=not turbo_mode,  # Skip auto-prompts in turbo
+                turbo_mode=turbo_mode
             )
+            
+            processing_time = result.get("processing_time_ms", 0)
+            logger.info(f"Processed {image.filename} in {processing_time}ms (mode: {result.get('processing_mode')})")
             
             # Convert result annotations to our model
             for ann_data in result["annotations"]:
