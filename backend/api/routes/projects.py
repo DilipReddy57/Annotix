@@ -33,6 +33,27 @@ async def list_projects(session: Session = Depends(get_session)):
     projects = session.exec(select(Project)).all()
     return projects
 
+@router.delete("/{project_id}")
+async def delete_project(project_id: str, session: Session = Depends(get_session)):
+    """Delete a project and all its associated data (images, annotations, videos)."""
+    project = session.get(Project, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Delete project directory and files
+    project_dir = os.path.join(settings.UPLOAD_DIR, project_id)
+    if os.path.exists(project_dir):
+        shutil.rmtree(project_dir)
+        logger.info(f"Deleted project directory: {project_dir}")
+    
+    # Delete from database (cascade will handle images, annotations)
+    session.delete(project)
+    session.commit()
+    
+    logger.info(f"Deleted project: {project.name} ({project_id})")
+    return {"status": "deleted", "project_id": project_id, "project_name": project.name}
+
+
 @router.post("/import-dataset")
 async def import_dataset(
     request: Dict,

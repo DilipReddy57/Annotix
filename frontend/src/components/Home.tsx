@@ -163,19 +163,34 @@ const Home = () => {
 
       try {
         // Call backend to import dataset from URL
-        await axios.post(`${API_BASE_URL}/api/projects/import-dataset`, {
-          url,
-          source,
-        });
+        const response = await axios.post(
+          `${API_BASE_URL}/api/projects/import-dataset`,
+          {
+            url,
+            source,
+          }
+        );
+
+        const { project_id, project_name, message } = response.data;
 
         setUploadStatus("success");
+
+        // Show success message
+        alert(
+          `✅ Import Started!\n\n${message}\n\nProject ID: ${project_id}\n\nNote: Large datasets download in the background. Check the project in Studio after a few moments.`
+        );
+
         setTimeout(() => {
           setIsUploading(false);
           setUploadStatus("idle");
-          navigate("/studio");
+          // Reload to refresh stats
+          window.location.reload();
         }, 1000);
       } catch (error: any) {
         console.error("Dataset import failed:", error);
+        const errorMsg =
+          error.response?.data?.detail || error.message || "Unknown error";
+        alert(`❌ Import Failed!\n\n${errorMsg}`);
         setUploadStatus("error");
         setTimeout(() => {
           setIsUploading(false);
